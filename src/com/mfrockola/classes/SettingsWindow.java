@@ -83,6 +83,7 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 	private JLabel labelSelector; // label del resultado del tamaño del seletor
 	private JCheckBox lockScreen;
 	private JCheckBox saveSongs;
+	private JCheckBox enableVip;
 	private JButton botonColor1; // boton selector de color de celda 1
 	private JButton botonColor2; // boton selector de color de celda 2
 	private JButton botonColorDeFuente; // boton selector del color de la fuente
@@ -368,17 +369,23 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		saveSongs.setBackground(Color.WHITE);
 		panel3.add(saveSongs);
 
+		enableVip = new JCheckBox("Habilitar VIP");
+		enableVip.setBounds(285,221,254,14);
+		enableVip.setHorizontalAlignment(SwingConstants.RIGHT);
+		enableVip.setBackground(Color.WHITE);
+		panel3.add(enableVip);
+
 		Border border = BorderFactory.createLineBorder(Color.BLACK);
 
 		JLabel labelTamanioDeLetraSelector = new JLabel("Tamaño de letra de la selección musical");
-		labelTamanioDeLetraSelector.setBounds(291,221,200,14);
+		labelTamanioDeLetraSelector.setBounds(291,246,200,14);
 		labelTamanioDeLetraSelector.setHorizontalAlignment(SwingConstants.RIGHT);
 		panel3.add(labelTamanioDeLetraSelector);
 
 		String [] tamanios = {"8","9","10","11","12","13","14","16","18","20","24","28","36","48","50","55","60","65","70","72"};
 
 		comboBoxTamanioDeFuenteSelector = new JComboBox(tamanios);
-		comboBoxTamanioDeFuenteSelector.setBounds(498,216,43,23);
+		comboBoxTamanioDeFuenteSelector.setBounds(498,241,43,23);
 		panel3.add(comboBoxTamanioDeFuenteSelector);
 
 		comboBoxTamanioDeFuenteSelector.addActionListener(new ActionListener() {
@@ -391,7 +398,7 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		labelSelector = new JLabel("- - - 2 8");
 		labelSelector.setHorizontalAlignment(JLabel.CENTER);
 		labelSelector.setBorder(border);
-		labelSelector.setBounds(220,245,321,106);
+		labelSelector.setBounds(220,270,321,106);
 		labelSelector.setOpaque(true);
 		panel3.add(labelSelector);
 
@@ -515,7 +522,7 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		txtpnAdvertenciaTengaCuidado.setText("Advertencia: Tenga cuidado al modificar el directorio del VLC. Consulte la documentación antes de realizar modificaciones");
 		txtpnAdvertenciaTengaCuidado.setEditable(false);
 		txtpnAdvertenciaTengaCuidado.setFocusable(false);
-		txtpnAdvertenciaTengaCuidado.setBounds(10, 340, 585, 23);
+		txtpnAdvertenciaTengaCuidado.setBounds(10, 365, 585, 23);
 		panel4.add(txtpnAdvertenciaTengaCuidado);
 
 		Icon teclas = new ImageIcon(this.getClass().getResource("/com/mfrockola/imagenes/teclas.png"));
@@ -1124,7 +1131,7 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		getContentPane().add(panelPrincipal);
 
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(0, 0, 642, 475); // posicion de la ventana
+		setBounds(0, 0, 642, 500); // posicion de la ventana
 
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		setLocation((screenSize.width-getWidth())/2,(screenSize.height-getHeight())/2);
@@ -1195,6 +1202,12 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 			saveSongs.setSelected(true);
 		} else {
 			saveSongs.setSelected(false);
+		}
+
+		if ((boolean) mSettingsManager.getSetting(KEY_ENABLE_VIP)) {
+			enableVip.setSelected(true);
+		} else {
+			enableVip.setSelected(false);
 		}
 
 		if ((int) mSettingsManager.getSetting(KEY_CLICK_OF_CREDITS) == 0) {
@@ -1405,6 +1418,7 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_FREE,libre));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_LOCK_SCREEN,lockScreen.isSelected()));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_SAVE_SONGS,saveSongs.isSelected()));
+		mSettingsManager.writeSetting(false, new KeyPairValue(KEY_ENABLE_VIP, enableVip.isSelected()));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_PROMOTIONAL_VIDEO,videoPromocional));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_DEFAULT_PROMOTIONAL_VIDEO,defaultVideoPromotional));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_CLICK_OF_CREDITS,clickCreditos));

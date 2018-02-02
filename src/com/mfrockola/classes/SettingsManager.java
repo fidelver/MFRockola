@@ -27,6 +27,7 @@ public class SettingsManager {
     static final String KEY_LOCK_SCREEN = "lockScreen";
     static final String KEY_SAVE_SONGS = "saveSongs";
     static final String KEY_FONT_SELECTOR_SIZE = "fontSelectorSize";
+    static final String KEY_ENABLE_VIP = "enableVip";
 
     // Panel PATHS
     static final String KEY_PATH_SONGS = "pathSongs";
@@ -192,6 +193,7 @@ public class SettingsManager {
         newSettings.add(new KeyPairValue(KEY_LOCK_SCREEN,true));
         newSettings.add(new KeyPairValue(KEY_SAVE_SONGS,true));
         newSettings.add(new KeyPairValue(KEY_FONT_SELECTOR_SIZE,50));
+        newSettings.add(new KeyPairValue(KEY_ENABLE_VIP, false));
 
         // Panel PATHS
         newSettings.add(new KeyPairValue(KEY_PATH_SONGS,"c:\\videos"));

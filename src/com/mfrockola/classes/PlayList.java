@@ -13,8 +13,13 @@ class PlayList {
         mPlayList = new ArrayList<>();
     }
 
-    void addSong (Song song) {
-        mPlayList.add(song);
+    void addSong (Song song, int type) {
+        song.setType(type);
+        if (mPlayList.size()> 0) {
+            mPlayList.add(findPosition(type) + 1, song);
+        } else {
+            mPlayList.add(song);
+        }
     }
 
     String songToPlay() {
@@ -51,10 +56,34 @@ class PlayList {
             songJsonObject.put("songGenre",song.getSongGenre());
             songJsonObject.put("songSinger",song.getSinger());
             songJsonObject.put("songName",song.getSongName());
+            songJsonObject.put("songType", song.getType());
         } catch (JSONException e) {
             e.printStackTrace();
         }
         return songJsonObject;
+    }
+
+    private int findPosition(int type) {
+        int position = 0;
+        int lastSuperVIP = 0;
+        int size = mPlayList.size();
+
+        Song song;
+
+        for (int i = 0; i < size; i++) {
+            song = mPlayList.get(i);
+            if (song.getType() == Song.SUPER_VIP) {
+                lastSuperVIP = position = i;
+            }
+        }
+
+        for (int i = lastSuperVIP; i < size; i++) {
+            song = mPlayList.get(i);
+            if (song.getType() == type) {
+                position = i;
+            }
+        }
+        return position;
     }
 
     Object[] getPlayList(){

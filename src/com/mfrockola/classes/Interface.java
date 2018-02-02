@@ -29,6 +29,8 @@ import static com.mfrockola.classes.Utils.*;
  */
 class Interface extends JFrame {
 
+    private boolean selectVIP;
+    private int selectionVIP = -1;
     private int randomSong;
     private int resetSongs;
     private boolean promotionalVideo;
@@ -38,6 +40,7 @@ class Interface extends JFrame {
     private int amountOfCredits;
     private boolean free;
     private boolean lockScreen;
+    private boolean enableVip;
     private int fontSelectorSize;
 
     private String pathSongs;
@@ -180,6 +183,7 @@ class Interface extends JFrame {
             amountOfCredits = (int) mUserSettings.getSetting(KEY_AMOUNT_OF_CREDITS);
             free = (boolean) mUserSettings.getSetting(KEY_FREE);
             lockScreen = (boolean) mUserSettings.getSetting(KEY_LOCK_SCREEN);
+            enableVip = (boolean) mUserSettings.getSetting(KEY_ENABLE_VIP);
             fontSelectorSize = (int) mUserSettings.getSetting(KEY_FONT_SELECTOR_SIZE);
 
             pathSongs = (String) mUserSettings.getSetting(KEY_PATH_SONGS);
@@ -232,7 +236,7 @@ class Interface extends JFrame {
                                 songJSON.getInt(KEY_SONG_NUMBER),
                                 songJSON.getString(KEY_SONG_GENRE),
                                 songJSON.getString(KEY_SONG_SINGER),
-                                songJSON.getString(KEY_SONG_NAME)));
+                                songJSON.getString(KEY_SONG_NAME)), Song.NORMAL);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -700,53 +704,45 @@ class Interface extends JFrame {
                 mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
             }
 
-            if ((evento.getKeyCode()==48 || evento.getKeyCode()==96) && (credits > 0 || !lockScreen))
-            {
-                mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
-            }
-            else if ((evento.getKeyCode()==49 || evento.getKeyCode()==97) && (credits > 0 || !lockScreen))
-            {
-                mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
-            }
-            else if ((evento.getKeyCode()==50 || evento.getKeyCode()==98) && (credits > 0 || !lockScreen))
-            {
-                mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
-            }
-            else if ((evento.getKeyCode()==51 || evento.getKeyCode()==99) && (credits > 0 || !lockScreen))
-            {
-                mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
-            }
-            else if ((evento.getKeyCode()==52 || evento.getKeyCode()==100) && (credits > 0 || !lockScreen))
-            {
-                mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
-            }
-            else if ((evento.getKeyCode()==53 || evento.getKeyCode()==101) && (credits > 0 || !lockScreen))
-            {
-                mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
-            }
-            else if ((evento.getKeyCode()==54 || evento.getKeyCode()==102) && (credits > 0 || !lockScreen))
-            {
-                mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
-            }
-            else if ((evento.getKeyCode()==55 || evento.getKeyCode()==103) && (credits > 0 || !lockScreen))
-            {
-                mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
-            }
-            else if ((evento.getKeyCode()==56 || evento.getKeyCode()==104) && (credits > 0 || !lockScreen))
-            {
-                mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
-            }
-            else if ((evento.getKeyCode()==57 || evento.getKeyCode()==105) && (credits > 0 || !lockScreen))
-            {
-                mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
+            if (((evento.getKeyCode() > 47 && evento.getKeyCode() < 58) || (evento.getKeyCode() > 95 && evento.getKeyCode() < 106)) && (credits > 0 || !lockScreen)) {
+                if (selectVIP) {
+                    if (((evento.getKeyCode() > 48 && evento.getKeyCode() < 52) || (evento.getKeyCode() > 96 && evento.getKeyCode() < 100))) {
+                        selectVIP = false;
+
+                        switch (evento.getKeyCode()) {
+                            case 49: {
+                                selectionVIP = Song.NORMAL;
+                                break;
+                            }
+                            case 50: {
+                                selectionVIP = Song.VIP;
+                                break;
+                            }
+                            case 51: {
+                                if (credits > 2) selectionVIP = Song.SUPER_VIP;
+                                break;
+                            }
+                            default: {
+                                selectionVIP = Song.UNSELECTED_VIP;
+                            }
+                        }
+
+                        labelPromotions.setVisible(false);
+                    } else {
+                        selectionVIP = -1;
+                        evento.consume();
+                    }
+                } else {
+                    mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
+                }
             }
             else if (evento.getKeyCode()==77) {
                 Thread ic = new Thread(new InternetConnection());
 //                addSongToPlayList(ic.start());
             }
 
-            if (mSongSelector.play)
-            {
+            // Aqui empieza la opcion de agregar musica a la lista de reproduccion
+            if (mSongSelector.play) {
                 int numero;
                 boolean condicion = false;
 
@@ -764,104 +760,25 @@ class Interface extends JFrame {
                     mSongSelector.resetValues();
                     mSongSelector.labelSelector.setText("- - - - -");
                     timerChangerLabelCredits.start();
-                }
-                else
-                {
-                    if ((credits > 0 && condicion)||(free && condicion))
-                    {
-                        if (mPlayList.songToPlay()==null)
-                        {
-                            if (timerRandomSong.isRunning()) {
-                                timerRandomSong.stop();
-                            }
-
-                            Song cancionAReproducir =  listMusicData.getSong(numero);
-
-                            mPlayList.addSong(cancionAReproducir);
-
-                            int extension = Utils.getExtension(String.format("%s\\%s\\%s\\%s", pathSongs,mPlayList.getSongGender(),mPlayList.getSinger(), mPlayList.songToPlay()));
-
-                            if (extension == EXT_MP4 || extension == EXT_AVI || extension == EXT_MPG || extension == EXT_FLV || extension == EXT_MKV) {
-                                mMediaPlayer.playVideo(mPlayList.getSongGender(),mPlayList.getSinger(),mPlayList.songToPlay());
-                            } else if (extension == EXT_MP3 || extension == EXT_WMA || extension == EXT_WAV || extension == EXT_AAC) {
-                                mMediaPlayer.playAudio(
-                                        mPlayList.getSongGender(),
-                                        mPlayList.getSinger(),
-                                        mPlayList.songToPlay(),
-                                        pathVideosMP3 + "\\" + listMusicData.getPromVideo());
-                            }
-
-                            playListInterface.setListData(mPlayList.getPlayList());
-                            if (!free)
-                            {
-                                --credits;
-                                mUserSettings.writeSetting(true,new KeyPairValue(KEY_SAVED_CREDITS,credits));
-                                labelCredits.setText(String.format("%s: %d","Creditos",credits));
-                            }
-                            mSongSelector.play = false;
-                            mSongSelector.resetValues();
-                            mSongSelector.labelSelector.setText("- - - - -");
-                            mBlockedSongs.blockSong(numero);
-                            labelSongPlayingBottom.setText(String.format("%05d - %s - %s - %s",
-                                    mPlayList.getSongNumber(),
-                                    mPlayList.getSongGender(),
-                                    mPlayList.getSinger(),
-                                    mPlayList.songToPlay()));
-                            labelSongPlayingRight.setText(String.format("%05d - %s - %s - %s",
-                                    mPlayList.getSongNumber(),mPlayList.getSongGender(),
-                                    mPlayList.getSinger(), mPlayList.songToPlay()));
-                            if (credits == 0 && !free) {
-                                timerFullScreen.restart();
-                            }
-
-                            if (continuousCredits) {
-                                insertedCredits = 0;
-                            }
-
-                            updateDataBase(cancionAReproducir);
-                        }
-                        else
-                        {
-                            Song cancionAReproducir = listMusicData.getSong(numero);
-                            //Song cancion = new Song(numero, cancionAReproducir);
-                            mPlayList.addSong(cancionAReproducir);
-                            JSONObject jsonSong = mPlayList.getSongJSONObject(cancionAReproducir);
-                            savedSongs.put(jsonSong);
-                            mUserSettings.writeSetting(false,new KeyPairValue(KEY_SAVED_SONGS,savedSongs));
-                            playListInterface.setListData(mPlayList.getPlayList());
-                            if (!free) {
-                                --credits;
-                                mUserSettings.writeSetting(true,new KeyPairValue(KEY_SAVED_CREDITS,credits));
-                                labelCredits.setForeground(Color.WHITE);
-                                labelCredits.setText(String.format("%s: %d","Creditos",credits));
-                            }
-                            mSongSelector.play = false;
-                            mSongSelector.resetValues();
-                            mSongSelector.labelSelector.setText("- - - - -");
-                            mBlockedSongs.blockSong(numero);
-                            if (credits == 0 && !free) {
-                                timerFullScreen.restart();
-                            }
-
-                            if (continuousCredits) {
-                                insertedCredits = 0;
-                            }
-
-                            updateDataBase(cancionAReproducir);
-                        }
-                    }
-                    else
-                    {
+                } else {
+                    // verificamos si los creditos son mayor que 1 para activar el VIP
+                    if (enableVip && credits > 1 && selectionVIP == -1) {
+                        enableVIP();
+                    } else if ((credits > 0 && condicion)||(free && condicion)) {
+                        consumirCancion(numero);
+                        selectionVIP = -1;
+                    } else {
                         labelCredits.setForeground(Color.RED);
                         labelCredits.setText("La canción que ha seleccionado no se puede reproducir antes de " + resetSongs +" mins");
                         timerChangerLabelCredits.start();
                         mSongSelector.play = false;
                         mSongSelector.resetValues();
                         mSongSelector.labelSelector.setText("- - - - -");
+                        selectionVIP = -1;
                     }
                 }
-            }
-            else if (evento.getKeyCode()==122) {
+                // Aqui termina la opcion de agregar cancion a la lista de reproduccion
+            } else if (evento.getKeyCode()==122) {
                 String contrasenia = JOptionPane.showInputDialog("Introduzca la clave");
                 if (contrasenia.equals("12345")) {
                     if (!free) {
@@ -977,6 +894,115 @@ class Interface extends JFrame {
                 labelCredits.setText(String.format("Creditos: %d", credits));
                 if (credits == 0 && !free) {
                     timerFullScreen.restart();
+                }
+            }
+        }
+
+        private void enableVIP() {
+            selectVIP = true;
+            if (credits == 2) {
+                labelPromotions.setText("Presione 1 Normal, 2 VIP");
+            } else {
+                labelPromotions.setText("Presione 1 Normal, 2 VIP, 3 Super VIP");
+            }
+
+            labelPromotions.setVisible(true);
+        }
+
+        private void consumirCancion(int numero) {
+            if (mPlayList.songToPlay()==null)
+            {
+                if (timerRandomSong.isRunning()) {
+                    timerRandomSong.stop();
+                }
+
+                Song cancionAReproducir =  listMusicData.getSong(numero);
+
+                mPlayList.addSong(cancionAReproducir, selectionVIP);
+
+                int extension = Utils.getExtension(String.format("%s\\%s\\%s\\%s", pathSongs,mPlayList.getSongGender(),mPlayList.getSinger(), mPlayList.songToPlay()));
+
+                if (extension == EXT_MP4 || extension == EXT_AVI || extension == EXT_MPG || extension == EXT_FLV || extension == EXT_MKV) {
+                    mMediaPlayer.playVideo(mPlayList.getSongGender(),mPlayList.getSinger(),mPlayList.songToPlay());
+                } else if (extension == EXT_MP3 || extension == EXT_WMA || extension == EXT_WAV || extension == EXT_AAC) {
+                    mMediaPlayer.playAudio(
+                            mPlayList.getSongGender(),
+                            mPlayList.getSinger(),
+                            mPlayList.songToPlay(),
+                            pathVideosMP3 + "\\" + listMusicData.getPromVideo());
+                }
+
+                playListInterface.setListData(mPlayList.getPlayList());
+                if (!free) {
+                    cobrarCreditos();
+                    mUserSettings.writeSetting(true,new KeyPairValue(KEY_SAVED_CREDITS,credits));
+                    labelCredits.setText(String.format("%s: %d","Creditos",credits));
+                }
+                mSongSelector.play = false;
+                mSongSelector.resetValues();
+                mSongSelector.labelSelector.setText("- - - - -");
+                mBlockedSongs.blockSong(numero);
+                labelSongPlayingBottom.setText(String.format("%05d - %s - %s - %s",
+                        mPlayList.getSongNumber(),
+                        mPlayList.getSongGender(),
+                        mPlayList.getSinger(),
+                        mPlayList.songToPlay()));
+                labelSongPlayingRight.setText(String.format("%05d - %s - %s - %s",
+                        mPlayList.getSongNumber(),mPlayList.getSongGender(),
+                        mPlayList.getSinger(), mPlayList.songToPlay()));
+                if (credits == 0 && !free) {
+                    timerFullScreen.restart();
+                }
+
+                if (continuousCredits) {
+                    insertedCredits = 0;
+                }
+
+                updateDataBase(cancionAReproducir);
+            }
+            else
+            {
+                Song cancionAReproducir = listMusicData.getSong(numero);
+                //Song cancion = new Song(numero, cancionAReproducir);
+                mPlayList.addSong(cancionAReproducir, selectionVIP);
+                JSONObject jsonSong = mPlayList.getSongJSONObject(cancionAReproducir);
+                savedSongs.put(jsonSong);
+                mUserSettings.writeSetting(false,new KeyPairValue(KEY_SAVED_SONGS,savedSongs));
+                playListInterface.setListData(mPlayList.getPlayList());
+                if (!free) {
+                    cobrarCreditos();
+                    mUserSettings.writeSetting(true,new KeyPairValue(KEY_SAVED_CREDITS,credits));
+                    labelCredits.setForeground(Color.WHITE);
+                    labelCredits.setText(String.format("%s: %d","Creditos",credits));
+                }
+                mSongSelector.play = false;
+                mSongSelector.resetValues();
+                mSongSelector.labelSelector.setText("- - - - -");
+                mBlockedSongs.blockSong(numero);
+                if (credits == 0 && !free) {
+                    timerFullScreen.restart();
+                }
+
+                if (continuousCredits) {
+                    insertedCredits = 0;
+                }
+
+                updateDataBase(cancionAReproducir);
+            }
+        }
+
+        private void cobrarCreditos() {
+            switch (selectionVIP) {
+                case 2: {
+                    credits -= 2;
+                    break;
+                }
+                case 3: {
+                    credits -= 3;
+                    break;
+                }
+                default: {
+                    credits--;
                 }
             }
         }
@@ -1111,7 +1137,7 @@ class Interface extends JFrame {
 
         Random random = new Random();
 
-        mPlayList.addSong(listMusicData.getSong(random.nextInt(listMusicData.getSizeListOfSongs())));
+        mPlayList.addSong(listMusicData.getSong(random.nextInt(listMusicData.getSizeListOfSongs())), selectionVIP);
 
         int extension = Utils.getExtension(String.format("%s\\%s\\%s\\%s", pathSongs,mPlayList.getSongGender(),mPlayList.getSinger(), mPlayList.songToPlay()));
 
@@ -1168,7 +1194,7 @@ class Interface extends JFrame {
             for (int i = 0; i < numbers.size(); i++) {
                 Song cancionAReproducir = listMusicData.getSong((int) numbers.get(i));
                 //Song cancion = new Song(numero, cancionAReproducir);
-                mPlayList.addSong(cancionAReproducir);
+                mPlayList.addSong(cancionAReproducir, selectionVIP);
 
             }
         }
