@@ -51,6 +51,7 @@ public class SettingsManager {
     // Panel APPEARANCE
     static final String KEY_DEFAULT_BACKGROUND = "defaultBackground";
     static final String KEY_PATH_BACKGRONUD = "pathBackground";
+    static final String KEY_MODE_GENRE_LIST = "modeGenreList";
     static final String KEY_COLOR_1 = "color1";
     static final String KEY_COLOR_2 = "color2";
     static final String KEY_FONT_CELLS = "fontCells";
@@ -217,6 +218,7 @@ public class SettingsManager {
         // Panel APPEARANCE
         newSettings.add(new KeyPairValue(KEY_DEFAULT_BACKGROUND,true));
         newSettings.add(new KeyPairValue(KEY_PATH_BACKGRONUD,getDeaultURLBackground().getFile()));
+        newSettings.add(new KeyPairValue(KEY_MODE_GENRE_LIST, true));
         newSettings.add(new KeyPairValue(KEY_COLOR_1,"102,204,255"));
         newSettings.add(new KeyPairValue(KEY_COLOR_2,"255,255,255"));
         newSettings.add(new KeyPairValue(KEY_FONT_CELLS,"Consolas"));

@@ -60,6 +60,7 @@ class Interface extends JFrame {
     private boolean rightClickCancelMusic;
     private String password;
 
+    private boolean defaultInterface;
     private boolean defaultBackground;
     private String pathBackground;
     private Color color1;
@@ -151,6 +152,9 @@ class Interface extends JFrame {
     // Bars for the list of songs
     private JScrollPane mScrollPane;
 
+    private JScrollPane mSingerPane;
+    private SingerList mSingerList;
+
     // This timer controls the text that shows the credit tag
     private Timer timerChangerLabelCredits;
 
@@ -203,6 +207,7 @@ class Interface extends JFrame {
             rightClickCancelMusic = (boolean) mUserSettings.getSetting(KEY_RIGHT_CLICK_CANCEL_MUSIC);
             password = (String) mUserSettings.getSetting(KEY_PASSWORD);
 
+            defaultInterface = false;
             defaultBackground = (boolean) mUserSettings.getSetting(KEY_DEFAULT_BACKGROUND);
             pathBackground = (String) mUserSettings.getSetting(KEY_PATH_BACKGRONUD);
             color1 = Utils.getColor((String) mUserSettings.getSetting(KEY_COLOR_1));
@@ -306,7 +311,11 @@ class Interface extends JFrame {
             new SettingsWindow();
         }
 
-        initComponents();
+        if (defaultInterface) {
+            initComponents();
+        } else {
+            initOptionalInterface();
+        }
 
         ActionListener changeLblCredits = e -> {
             if (free) {
@@ -626,10 +635,167 @@ class Interface extends JFrame {
         mainPanel.add(playListInterface);
     }
 
+    private void initOptionalInterface() {
+
+        credits = savedCredits;
+
+        resolution = Toolkit.getDefaultToolkit().getScreenSize();
+
+        widthScreen = (int) resolution.getWidth();
+        heightScreen = (int) (resolution.getHeight() - 54);
+
+        setIconImage(Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("/com/mfrockola/imagenes/icono.png")));
+
+        // Iniciar los labels
+
+        labelMusicalGenre = new JLabel("Genero");
+        labelMusicalGenre.setForeground(Color.WHITE);
+        labelMusicalGenre.setFont(new Font("Calibri", Font.BOLD, 23));
+        labelMusicalGenre.setBounds((int)(widthScreen/45.533), (int)(heightScreen/51.2), (int)(widthScreen/1.7603), 35);
+
+        if (free) {
+            labelCredits= new JLabel("Creditos Libres");
+        } else {
+            labelCredits = new JLabel(String.format("Creditos: %d", savedCredits));
+        }
+
+        labelCredits.setForeground(Color.WHITE);
+        labelCredits.setFont(new Font("Calibri", Font.BOLD, 23));
+        labelCredits.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
+
+        Icon log = new ImageIcon(this.getClass().getResource("/com/mfrockola/imagenes/nombre.png"));
+        JLabel labelLogo = new JLabel(log);
+        labelLogo.setHorizontalAlignment(SwingConstants.RIGHT);
+        labelLogo.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+
+        labelSongPlayingRight = new JLabel("Su selección musical");
+        labelSongPlayingRight.setForeground(Color.WHITE);
+        labelSongPlayingRight.setFont(new Font("Calibri", Font.BOLD, 23));
+        labelSongPlayingRight.setHorizontalAlignment(SwingConstants.CENTER);
+
+        labelSongPlayingBottom = new JLabel();
+        labelSongPlayingBottom.setText("MFRockola");
+        labelSongPlayingBottom.setHorizontalAlignment(SwingConstants.CENTER);
+        labelSongPlayingBottom.setForeground(Color.WHITE);
+        labelSongPlayingBottom.setFont(new Font("Calibri", Font.BOLD, 23));
+
+        Icon icon = new ImageIcon(this.getClass().getResource("/com/mfrockola/imagenes/promocionLabel.png"));
+        labelPromotions = new JLabel("Aqui van las promociones",icon,JLabel.CENTER);
+        labelPromotions.setVerticalTextPosition(JLabel.BOTTOM);
+        labelPromotions.setHorizontalTextPosition(JLabel.CENTER);
+        labelPromotions.setForeground(Color.BLACK);
+        labelPromotions.setBorder(BorderFactory.createLineBorder(Color.BLACK,3));
+        labelPromotions.setFont(new Font("Calibri", Font.BOLD, 23));
+        labelPromotions.setHorizontalAlignment(SwingConstants.CENTER);
+        labelPromotions.setVisible(false);
+        labelPromotions.setOpaque(true);
+        labelPromotions.setBackground(Color.WHITE);
+        labelPromotions.setBounds((widthScreen/2)-250,(heightScreen/2)-80,500,160);
+
+        // Iniciar las listas
+
+        listMusicData = new ListMusic(pathSongs,pathVideosMP3); //Aqui falta la direccion de los videos promocionales
+
+        mSongListInterface = new JList();
+        mSongListInterface.setCellRenderer(new RowRenderer(new Font(fontCells,
+                fontCellsBold,fontCellsSize),fontCellsColor,
+                color1, color2));
+        mSongListInterface.setListData(listMusicData.getGenderSongs(0));
+        mSongListInterface.addKeyListener(mKeyboardManager);
+        mSongListInterface.setVisibleRowCount(20);
+        mSongListInterface.setFocusable(false);
+        mSongListInterface.setMaximumSize(getMaximumSize());
+
+
+        mSingerList = new SingerList((int)(widthScreen/1.7603), (int) (heightScreen/4.5));
+        mSingerList.setBounds((int)(widthScreen/45.533), (int)(heightScreen/13.84),(int)(widthScreen/1.7603), (int)(heightScreen/4.5));
+
+//        mSingerPane = new JScrollPane(mSingerList);
+//        mSingerPane.setBounds((int)(widthScreen/45.533), (int)(heightScreen/13.84),(int)(widthScreen/1.7603), (int)(heightScreen/4.5));
+//        mSingerPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+//        mSingerPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+//        mSingerPane.setFocusable(false);
+//        mSingerPane.setVisible(false);
+
+        mScrollPane = new JScrollPane(mSongListInterface);
+        mScrollPane.setBounds((int)(widthScreen/45.533), (int)(heightScreen/3.3),(int)(widthScreen/1.7603), (int)(heightScreen/1.43));
+        mScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        mScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+
+        playListInterface = new JList();
+        playListInterface.setListData(mPlayList.getPlayList());
+        playListInterface.setCellRenderer(new RowRenderer(new Font(fontCells,
+                fontCellsBold, fontCellsSize),fontCellsColor,
+                color1, color2));
+        playListInterface.setBounds((int)(widthScreen/1.633), (int)(heightScreen/1.52), (int)(widthScreen/2.732), (int)(heightScreen/3.051));
+//        listaDeReproduccion.setBounds(ancho - 530, alto - 260, 500, alto-461);
+        playListInterface.setFocusable(false);
+
+        labelMusicalGenre.setText("Genero Musical: "+ listMusicData.getNameOfGender());
+
+        // Iniciar los panel
+
+        JPanel mainPanel = new JPanel();
+        mainPanel.setOpaque(false);
+        mainPanel.setLayout(null);
+        mainPanel.add(labelPromotions);
+        mainPanel.add(mScrollPane);
+
+        mainPanel.add(labelMusicalGenre);
+        mainPanel.add(mSingerList);
+
+        bottomPanel = new JPanel();
+        bottomPanel.setLayout(new BorderLayout());
+        bottomPanel.setOpaque(false);
+        bottomPanel.add(labelLogo,BorderLayout.EAST);
+
+        try {
+            if (defaultBackground) {
+                mBackgroundImagePanel = new BackgroundImagePanel(this.getClass().getResource("/com/mfrockola/imagenes/fondo.jpg"));
+            } else {
+                mBackgroundImagePanel = new BackgroundImagePanel(new URL("file:"+pathBackground));
+            }
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+
+        mBackgroundImagePanel.setLayout(new BorderLayout());
+        mBackgroundImagePanel.add(bottomPanel,BorderLayout.SOUTH);
+
+        mBackgroundImagePanel.add(mainPanel,BorderLayout.CENTER);
+
+        mMediaPlayer = new MediaPlayer(pathVLC,pathSongs);
+        videoPanel = new JPanel();
+        videoPanel.setLayout(new BorderLayout());
+        videoPanel.setBounds((int)(widthScreen/1.633), (int)(heightScreen/16.340),(int)(widthScreen/2.732), (int)(heightScreen/2.7137));
+        videoPanel.add(mMediaPlayer.getMediaPlayerContainer(),BorderLayout.CENTER);
+        mainPanel.add(videoPanel);
+
+        panel = new JPanel();
+        panel.setOpaque(false);
+        panel.setBounds((int)(widthScreen/1.633), (int)(heightScreen/2.2222), (int)(widthScreen/2.732), (int)(heightScreen/2.021));
+        mainPanel.add(panel);
+        panel.setLayout(new GridLayout(2, 1, 20, 0));
+
+        bottomPanel.add(labelCredits,BorderLayout.WEST);
+        bottomPanel.add(labelSongPlayingBottom, BorderLayout.CENTER);
+
+        JPanel panelRight = new JPanel();
+        panelRight.setOpaque(false);
+        panel.add(panelRight);
+        panelRight.setLayout(new GridLayout(3, 1, 0, 0));
+        panelRight.add(labelSongPlayingRight);
+
+        panelRight.add(mSongSelector.labelSelector);
+
+        mainPanel.add(playListInterface);
+    }
+
     private void setFullScreen()
     {
         if (!isFullScreen)
         {
+            mSingerList.setVisible(false);
             mScrollPane.setVisible(false);
             mSongListInterface.setVisible(false);
             panel.setVisible(false);
@@ -640,6 +806,7 @@ class Interface extends JFrame {
         else
         {
             videoPanel.setBounds((int)(widthScreen/1.633), (int)(heightScreen/16.340),(int)(widthScreen/2.732), (int)(heightScreen/2.7137));
+            mSingerList.setVisible(true);
             mScrollPane.setVisible(true);
             mSongListInterface.setVisible(true);
             panel.setVisible(true);
@@ -857,6 +1024,10 @@ class Interface extends JFrame {
                     mSongListInterface.ensureIndexIsVisible(0);
                     labelMusicalGenre.setText("Genero Musical: " + listMusicData.getNameOfGender());
                 }
+            } else if (evento.getKeyCode() == 37) {
+                mSingerList.setSelectedSinger(SingerList.MOVE_TO_LEFT);
+            } else if (evento.getKeyCode() == 39) {
+                mSingerList.setSelectedSinger(SingerList.MOVE_TO_RIGHT);
             } else if (evento.getKeyCode() == keyDownGenre && (credits > 0 || !lockScreen)) {
                 if (isFullScreen) {
                     setFullScreen();

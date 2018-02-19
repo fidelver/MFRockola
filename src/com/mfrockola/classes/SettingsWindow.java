@@ -63,6 +63,9 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 	private boolean libre;
 	private boolean videoPromocional;
 	private boolean defaultVideoPromotional;
+	private JRadioButton rdbtnModoGenerosListado;
+	private JRadioButton rdbtnModoArtistasCaratulas;
+	private boolean modoInterfaz;
 	private boolean defaultBackground;
 	private boolean cancelMusic;
 	private boolean selectVideoProm;
@@ -731,6 +734,41 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		buttonPathFunds.setBounds(532, 138, 30, 23);
 		panel6.add(buttonPathFunds);
 
+		JPanel panelEstructura = new JPanel();
+		panelEstructura.setBorder(BorderFactory.createTitledBorder("Modo de la interfaz"));
+		panelEstructura.setBounds(230,172,393,75);
+		panelEstructura.setBackground(Color.WHITE);
+		panelEstructura.setLayout(null);
+		panel6.add(panelEstructura);
+
+		ButtonGroup grupoModoInterfaz = new ButtonGroup();
+		rdbtnModoGenerosListado = new JRadioButton("Modo Generos/Listado");
+		rdbtnModoGenerosListado.setFocusable(false);
+		rdbtnModoGenerosListado.addItemListener(new manejadorRadioButtons());
+		rdbtnModoGenerosListado.setBounds(10, 15, 200, 23);
+		rdbtnModoGenerosListado.setOpaque(false);
+		panelEstructura.add(rdbtnModoGenerosListado);
+
+		rdbtnModoArtistasCaratulas = new JRadioButton("Modo Artistas/Con caratulas");
+		rdbtnModoArtistasCaratulas.setFocusable(false);
+		rdbtnModoArtistasCaratulas.addItemListener(new manejadorRadioButtons());
+		rdbtnModoArtistasCaratulas.setBounds(10, 40, 200, 23);
+		rdbtnModoArtistasCaratulas.setOpaque(false);
+		panelEstructura.add(rdbtnModoArtistasCaratulas);
+
+		grupoModoInterfaz.add(rdbtnModoGenerosListado);
+		grupoModoInterfaz.add(rdbtnModoArtistasCaratulas);
+
+		rdbtnModoGenerosListado.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e)
+			{
+				if (rdbtnModoGenerosListado.isSelected())
+					modoInterfaz = true;
+				else
+					modoInterfaz = false;
+			}
+		});
+
 		checkBoxFoundDefaultBackground = new JCheckBox("Fondo Predeterminado");
 		checkBoxFoundDefaultBackground.addItemListener(new ItemListener() {
 			public void itemStateChanged(ItemEvent e)
@@ -765,7 +803,7 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 
 		JPanel panelCeldas = new JPanel();
 		panelCeldas.setBorder(BorderFactory.createTitledBorder("Celdas de Canciones"));
-		panelCeldas.setBounds(230,177,393,133);
+		panelCeldas.setBounds(230,255,393,133);
 		panelCeldas.setBackground(Color.WHITE);
 		panelCeldas.setLayout(null);
 		panel6.add(panelCeldas);
@@ -1192,6 +1230,11 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		else
 			rdbtnNo.setSelected(true);
 
+		if((boolean) mSettingsManager.getSetting(KEY_MODE_GENRE_LIST) == true)
+			rdbtnModoGenerosListado.setSelected(true);
+		else
+			rdbtnModoArtistasCaratulas.setSelected(true);
+
 		if ((boolean) mSettingsManager.getSetting(KEY_LOCK_SCREEN)) {
 			lockScreen.setSelected(true);
 		} else {
@@ -1217,6 +1260,8 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 			rdbtnClickDerecho.setSelected(true);
 			clickCreditos = 1;
 		}
+
+		modoInterfaz = (boolean) mSettingsManager.getSetting(KEY_MODE_GENRE_LIST);
 
 		color1 = getColor((String) mSettingsManager.getSetting(KEY_COLOR_1));
 		color2 = getColor((String) mSettingsManager.getSetting(KEY_COLOR_2));
@@ -1437,6 +1482,7 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_INSERTED_CREDITS,Integer.parseInt(labelMonedasInsertadas.getText())));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_DEFAULT_BACKGROUND,defaultBackground));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_PATH_BACKGRONUD,textFieldDirFondos.getText()));
+		mSettingsManager.writeSetting(false, new KeyPairValue(KEY_MODE_GENRE_LIST, modoInterfaz));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_COLOR_1,String.format("%03d,%03d,%03d",color1.getRed(),color1.getGreen(),color1.getBlue())));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_COLOR_2,String.format("%03d,%03d,%03d",color2.getRed(),color2.getGreen(),color2.getBlue())));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_FONT_CELLS,comboBoxSelectorDeFuente.getSelectedItem().toString()));
