@@ -68,17 +68,6 @@ class Song {
 	// Override the toString method in order to print the song name correctly on the interface
 	@Override
 	public String toString() {
-		if (getType() == NORMAL) {
-			return String.format("%05d - %s - %s", getSongNumber(),getSinger(), getSongName());
-		}
-
-		if (getType() == VIP) {
-			return String.format("·· %05d - %s - %s", getSongNumber(),getSinger(), getSongName());
-		}
-
-		if (getType() == SUPER_VIP) {
-			return String.format("··· %05d - %s - %s", getSongNumber(),getSinger(), getSongName());
-		}
 		return String.format("%05d - %s - %s", getSongNumber(),getSinger(), getSongName());
 	}
 }

@@ -34,6 +34,20 @@ class RowRenderer extends JLabel implements ListCellRenderer {
 	public Component getListCellRendererComponent(JList list, Object value,
 			int index, boolean isSelected, boolean cellHasFocus) {
 
+		Song song = (Song) value;
+
+		if (song.getType() == Song.VIP) {
+			setForeground(new Color(26,114,20));
+		}
+
+		if (song.getType() == Song.SUPER_VIP) {
+			setForeground(new Color(160,123,30));
+		}
+
+		if (song.getType() == Song.NORMAL || song.getType() == Song.UNSELECTED_VIP) {
+			setForeground(Color.BLACK);
+		}
+
 		// If there are no songs in the list, it indicates, but, the name of the object is placed,
 		// in this case, the song
 		if (value == null) {

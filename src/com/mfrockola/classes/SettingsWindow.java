@@ -29,6 +29,12 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 	private TextFieldKey textFieldBajarL;
 	private TextFieldKey textFieldSubirGenero;
 	private TextFieldKey textFieldBajarGenero;
+	private TextFieldKey textFieldSubirListaModoArtistas;
+	private TextFieldKey textFieldBajarListaModoArtistas;
+	private TextFieldKey textFieldMoverIzqModoArtistas;
+	private TextFieldKey textFieldMoverDerModoArtistas;
+	private TextFieldKey textFieldReproducirCancionModoArtistas;
+
 	private TextFieldKey textFieldPantallaCompleta;
 	private TextFieldKey textFieldBorrar;
 	private TextFieldKey textFieldSaltarCancion;
@@ -103,8 +109,7 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 
 	private RenameSongs mRenameSongs;
 
-	public SettingsWindow()
-	{
+	public SettingsWindow() {
 		setTitle("Configuración");
 
 		setIconImage(Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("/com/mfrockola/imagenes/icono.png")));
@@ -535,119 +540,161 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		panel5.setLayout(null);
 		JLabel labelTeclas = new JLabel();
 		labelTeclas.setIcon(teclas);
-		labelTeclas.setBounds(10, 11, 200, 200);
+		labelTeclas.setBounds(10, 11, 100, 100);
 		panel5.add(labelTeclas);
 
 		JLabel lblConfiguracinDelTeclado = new JLabel("Configuración del Teclado y Mouse");
 		lblConfiguracinDelTeclado.setFont(new Font("Calibri", Font.BOLD, 21));
-		lblConfiguracinDelTeclado.setBounds(220, 11, 302, 27);
+		lblConfiguracinDelTeclado.setBounds(110, 11, 302, 27);
 		panel5.add(lblConfiguracinDelTeclado);
 
 		JTextPane txtpnEsteEsEl_1 = new JTextPane();
 		txtpnEsteEsEl_1.setText("Este es el panel para configurar el teclado y el mouse. Si la configuración por defecto no le conviene puede cambiarla por cualquier tecla. Por comodidad del usuario, el bloque numérico siempre estará activado cuando inicie MFRockola.");
 		txtpnEsteEsEl_1.setEditable(false);
 		txtpnEsteEsEl_1.setFocusable(false);
-		txtpnEsteEsEl_1.setBounds(220, 50, 367, 62);
+		txtpnEsteEsEl_1.setBounds(110, 50, 367, 62);
 		panel5.add(txtpnEsteEsEl_1);
 
-		JLabel lblSubirbajrLista = new JLabel("Subir/Bajr Lista");
-		lblSubirbajrLista.setHorizontalAlignment(SwingConstants.RIGHT);
-		lblSubirbajrLista.setBounds(262, 119, 103, 14);
-		panel5.add(lblSubirbajrLista);
+		// teclas para subir y bajar lista en el modo GENERO/LISTA
+
+		JPanel panelModoGeneros = new JPanel();
+		panelModoGeneros.setBorder(BorderFactory.createTitledBorder("Modo Generos/Lista"));
+		panelModoGeneros.setBounds(10,120,300,75);
+		panelModoGeneros.setBackground(Color.WHITE);
+		panelModoGeneros.setLayout(null);
+		panel5.add(panelModoGeneros);
+
+		JLabel lblSubirbajrLista = new JLabel("Subir/Bajar Lista");
+		lblSubirbajrLista.setBounds(140, 22, 103, 14);
+		panelModoGeneros.add(lblSubirbajrLista);
 
 		textFieldSubirL = new TextFieldKey(this,(int)mSettingsManager.getSetting(KEY_UP_LIST));
-		textFieldSubirL.setBounds(375, 119, 50, 20);
-		panel5.add(textFieldSubirL);
-
-		JLabel label_2 = new JLabel("/");
-		label_2.setBounds(435, 119, 4, 14);
-		panel5.add(label_2);
+		textFieldSubirL.setBounds(10, 20, 50, 20);
+		panelModoGeneros.add(textFieldSubirL);
 
 		textFieldBajarL = new TextFieldKey(this,(int)mSettingsManager.getSetting(KEY_DOWN_LIST));
-		textFieldBajarL.setBounds(451, 119, 50, 20);
-		panel5.add(textFieldBajarL);
+		textFieldBajarL.setBounds(77, 20, 50, 20);
+		panelModoGeneros.add(textFieldBajarL);
 
 		JLabel lblSubirBajarGenero = new JLabel("Subir/Bajr Genero");
-		lblSubirBajarGenero.setHorizontalAlignment(SwingConstants.RIGHT);
-		lblSubirBajarGenero.setBounds(262, 144, 103, 14);
-		panel5.add(lblSubirBajarGenero);
+		lblSubirBajarGenero.setBounds(140, 50, 103, 14);
+		panelModoGeneros.add(lblSubirBajarGenero);
 
 		textFieldSubirGenero = new TextFieldKey(this,(int)mSettingsManager.getSetting(KEY_UP_GENRE));
-		textFieldSubirGenero.setBounds(375, 144, 50, 20);
-		panel5.add(textFieldSubirGenero);
-
-		JLabel label_4 = new JLabel("/");
-		label_4.setBounds(435, 144, 4, 14);
-		panel5.add(label_4);
+		textFieldSubirGenero.setBounds(10, 45, 50, 20);
+		panelModoGeneros.add(textFieldSubirGenero);
 
 		textFieldBajarGenero = new TextFieldKey(this,(int)mSettingsManager.getSetting(KEY_DOWN_GENRE));
-		textFieldBajarGenero.setBounds(451, 144, 50, 20);
-		panel5.add(textFieldBajarGenero);
+		textFieldBajarGenero.setBounds(77, 45, 50, 20);
+		panelModoGeneros.add(textFieldBajarGenero);
+
+		// teclas para subir y bajar lista en el modo ARTISTAS/CARATULAS
+
+		JPanel panelModoArtistas = new JPanel();
+		panelModoArtistas.setBorder(BorderFactory.createTitledBorder("Modo Artistas/Catatulas"));
+		panelModoArtistas.setBounds(320,120,300,100);
+		panelModoArtistas.setBackground(Color.WHITE);
+		panelModoArtistas.setLayout(null);
+		panel5.add(panelModoArtistas);
+
+		JLabel lblSubirbajrListaModoArtistas = new JLabel("Subir/Bajar Lista");
+		lblSubirbajrListaModoArtistas.setBounds(140, 22, 103, 14);
+		panelModoArtistas.add(lblSubirbajrListaModoArtistas);
+
+		textFieldSubirListaModoArtistas = new TextFieldKey(this,(int)mSettingsManager.getSetting(KEY_UP_LIST_MODE_SINGERS));
+		textFieldSubirListaModoArtistas.setBounds(10, 20, 50, 20);
+		panelModoArtistas.add(textFieldSubirListaModoArtistas);
+
+		textFieldBajarListaModoArtistas = new TextFieldKey(this,(int)mSettingsManager.getSetting(KEY_DOWN_LIST_MODE_SINGERS));
+		textFieldBajarListaModoArtistas.setBounds(77, 20, 50, 20);
+		panelModoArtistas.add(textFieldBajarListaModoArtistas);
+
+		JLabel lblIzquierdaDerechaModoGenero = new JLabel("Izquierda/Derecha Caratulas");
+		lblIzquierdaDerechaModoGenero.setBounds(140, 50, 150, 14);
+		panelModoArtistas.add(lblIzquierdaDerechaModoGenero);
+
+		textFieldMoverIzqModoArtistas = new TextFieldKey(this,(int)mSettingsManager.getSetting(KEY_LEFT_COVERS_MODE_SINGERS));
+		textFieldMoverIzqModoArtistas.setBounds(10, 45, 50, 20);
+		panelModoArtistas.add(textFieldMoverIzqModoArtistas);
+
+		textFieldMoverDerModoArtistas = new TextFieldKey(this,(int)mSettingsManager.getSetting(KEY_RIGHT_COVERS_MODE_SINGERS));
+		textFieldMoverDerModoArtistas.setBounds(77, 45, 50, 20);
+		panelModoArtistas.add(textFieldMoverDerModoArtistas);
+
+		JLabel lblReproducirCancionModoArtistas = new JLabel("Reproducir canción");
+		lblReproducirCancionModoArtistas.setBounds(72, 75, 150, 14);
+		panelModoArtistas.add(lblReproducirCancionModoArtistas);
+
+		textFieldReproducirCancionModoArtistas = new TextFieldKey(this,(int)mSettingsManager.getSetting(KEY_LEFT_COVERS_MODE_SINGERS));
+		textFieldReproducirCancionModoArtistas.setBounds(10, 70, 50, 20);
+		panelModoArtistas.add(textFieldReproducirCancionModoArtistas);
+
+		// fin de teclas de desplazamiento
 
 		JLabel lblPantallaCompleta = new JLabel("Pantalla Completa");
 		lblPantallaCompleta.setHorizontalAlignment(SwingConstants.RIGHT);
-		lblPantallaCompleta.setBounds(262, 169, 103, 14);
+		lblPantallaCompleta.setBounds(10, 251, 103, 14);
 		panel5.add(lblPantallaCompleta);
 
 		textFieldPantallaCompleta = new TextFieldKey(this,(int)mSettingsManager.getSetting(KEY_FULL_SCREEN));
-		textFieldPantallaCompleta.setBounds(375, 169, 50, 20);
+		textFieldPantallaCompleta.setBounds(120, 247, 50, 20);
 		panel5.add(textFieldPantallaCompleta);
 
 		JLabel lblBorrar = new JLabel("Borrar");
 		lblBorrar.setHorizontalAlignment(SwingConstants.RIGHT);
-		lblBorrar.setBounds(262, 194, 103, 14);
+		lblBorrar.setBounds(10, 276, 103, 14);
 		panel5.add(lblBorrar);
 
 		textFieldBorrar = new TextFieldKey(this,(int)mSettingsManager.getSetting(KEY_DELETE_NUMBER));
 		textFieldBorrar.setColumns(10);
-		textFieldBorrar.setBounds(375, 194, 50, 20);
+		textFieldBorrar.setBounds(120, 272, 50, 20);
 		panel5.add(textFieldBorrar);
 
 		JLabel labelSaltarCancion = new JLabel("Tecla para saltar canción");
-		labelSaltarCancion.setBounds(167,219,200,23);
+		labelSaltarCancion.setBounds(167,247,200,23);
 		labelSaltarCancion.setHorizontalAlignment(SwingConstants.RIGHT);
 		panel5.add(labelSaltarCancion);
 
 		textFieldSaltarCancion = new TextFieldKey(this,(int)mSettingsManager.getSetting(KEY_NEXT_SONG)); // tecla 83 S
-		textFieldSaltarCancion.setBounds(375, 219, 50, 20);
+		textFieldSaltarCancion.setBounds(375, 247, 50, 20);
 		textFieldSaltarCancion.setColumns(10);
 		panel5.add(textFieldSaltarCancion);
 
 		JLabel labelTeclaAgregarCredito = new JLabel("Tecla para agregar credito");
-		labelTeclaAgregarCredito.setBounds(167,244,200,23);
+		labelTeclaAgregarCredito.setBounds(167,272,200,23);
 		labelTeclaAgregarCredito.setHorizontalAlignment(SwingConstants.RIGHT);
 		panel5.add(labelTeclaAgregarCredito);
 
 		textFieldAgregarCreditos = new TextFieldKey(this,(int)mSettingsManager.getSetting(KEY_ADD_CREDIT)); // tecla 65 A
 		textFieldAgregarCreditos.setColumns(10);
-		textFieldAgregarCreditos.setBounds(375, 244, 50, 20);
+		textFieldAgregarCreditos.setBounds(375, 272, 50, 20);
 		panel5.add(textFieldAgregarCreditos);
 
 		JLabel labelTeclaParaBorrarCredito = new JLabel("Tecla para borrar credito"); // tecla 66 S
-		labelTeclaParaBorrarCredito.setBounds(167,269,200,23);
+		labelTeclaParaBorrarCredito.setBounds(167,297,200,23);
 		labelTeclaParaBorrarCredito.setHorizontalAlignment(SwingConstants.RIGHT);
 		panel5.add(labelTeclaParaBorrarCredito);
 
 		textFieldBorrarCredito = new TextFieldKey(this,(int)mSettingsManager.getSetting(KEY_DELETE_CREDIT));
 		textFieldBorrarCredito.setColumns(10);
-		textFieldBorrarCredito.setBounds(375, 269, 50, 20);
+		textFieldBorrarCredito.setBounds(375, 297, 50, 20);
 		panel5.add(textFieldBorrarCredito);
 
 		JLabel lblAgregarCredito = new JLabel("Agregar Credito");
 		lblAgregarCredito.setHorizontalAlignment(SwingConstants.RIGHT);
-		lblAgregarCredito.setBounds(262, 294, 103, 14);
+		lblAgregarCredito.setBounds(262, 322, 103, 14);
 		panel5.add(lblAgregarCredito);
 
 		rdbtnClickIzquierdo = new JRadioButton("Click Izquierdo");
 
 
 		rdbtnClickIzquierdo.setBackground(Color.WHITE);
-		rdbtnClickIzquierdo.setBounds(375, 290, 95, 23);
+		rdbtnClickIzquierdo.setBounds(375, 318, 95, 23);
 		panel5.add(rdbtnClickIzquierdo);
 
 		rdbtnClickDerecho = new JRadioButton("Click Derecho");
 		rdbtnClickDerecho.setBackground(Color.WHITE);
-		rdbtnClickDerecho.setBounds(475, 290, 89, 23);
+		rdbtnClickDerecho.setBounds(475, 318, 89, 23);
 		panel5.add(rdbtnClickDerecho);
 
 		ButtonGroup grupoMouse = new ButtonGroup();
@@ -665,7 +712,7 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		grupoMouse.add(rdbtnClickDerecho);
 
 		checkBoxCancelMusic = new JCheckBox("Cancelar musica con click Derecho");
-		checkBoxCancelMusic.setBounds(375,313,200, 23);
+		checkBoxCancelMusic.setBounds(375,341,200, 23);
 		checkBoxCancelMusic.setBackground(Color.WHITE);
 		checkBoxCancelMusic.addItemListener(new ItemListener() {
 			@Override
@@ -692,12 +739,12 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		panel5.add(checkBoxCancelMusic);
 
 		JLabel labelPassword = new JLabel("Contraseña para eliminar canciones");
-		labelPassword.setBounds(165, 336, 200, 23);
+		labelPassword.setBounds(165, 364, 200, 23);
 		labelPassword.setHorizontalAlignment(SwingConstants.RIGHT);
 		panel5.add(labelPassword);
 
 		passwordField = new JPasswordField(5);
-		passwordField.setBounds(375,336,200, 23);
+		passwordField.setBounds(375,364,200, 23);
 		panel5.add(passwordField);
 
 		JPanel panel6 = new JPanel();
@@ -1203,6 +1250,12 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		textFieldSubirGenero.setKeyCode((int)mSettingsManager.getSetting(KEY_UP_GENRE));
 		textFieldBajarGenero.setText(Utils.printKeyCharCode((int)mSettingsManager.getSetting(KEY_DOWN_GENRE)));
 		textFieldBajarGenero.setKeyCode((int)mSettingsManager.getSetting(KEY_DOWN_GENRE));
+		textFieldSubirListaModoArtistas.setText(Utils.printKeyCharCode((int)mSettingsManager.getSetting(KEY_UP_LIST_MODE_SINGERS)));
+		textFieldBajarListaModoArtistas.setText(Utils.printKeyCharCode((int)mSettingsManager.getSetting(KEY_DOWN_LIST_MODE_SINGERS)));
+		textFieldMoverIzqModoArtistas.setText(Utils.printKeyCharCode((int)mSettingsManager.getSetting(KEY_LEFT_COVERS_MODE_SINGERS)));
+		textFieldMoverDerModoArtistas.setText(Utils.printKeyCharCode((int)mSettingsManager.getSetting(KEY_RIGHT_COVERS_MODE_SINGERS)));
+		textFieldReproducirCancionModoArtistas.setText(Utils.printKeyCharCode((int)mSettingsManager.getSetting(KEY_PLAY_SONG_MODE_SINGERS)));
+		textFieldReproducirCancionModoArtistas.setKeyCode((int) mSettingsManager.getSetting(KEY_PLAY_SONG_MODE_SINGERS));
 		textFieldPantallaCompleta.setText(Utils.printKeyCharCode((int)mSettingsManager.getSetting(KEY_FULL_SCREEN)));
 		textFieldPantallaCompleta.setKeyCode((int)mSettingsManager.getSetting(KEY_FULL_SCREEN));
 		textFieldBorrar.setText(Utils.printKeyCharCode((int)mSettingsManager.getSetting(KEY_DELETE_NUMBER)));
@@ -1471,6 +1524,13 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_DOWN_LIST,textFieldBajarL.getKeyCode()));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_UP_GENRE,textFieldSubirGenero.getKeyCode()));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_DOWN_GENRE,textFieldBajarGenero.getKeyCode()));
+
+		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_UP_LIST_MODE_SINGERS,textFieldSubirListaModoArtistas.getKeyCode()));
+		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_DOWN_LIST_MODE_SINGERS,textFieldBajarListaModoArtistas.getKeyCode()));
+		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_LEFT_COVERS_MODE_SINGERS,textFieldMoverIzqModoArtistas.getKeyCode()));
+		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_RIGHT_COVERS_MODE_SINGERS,textFieldMoverDerModoArtistas.getKeyCode()));
+		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_PLAY_SONG_MODE_SINGERS,textFieldReproducirCancionModoArtistas.getKeyCode()));
+
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_FULL_SCREEN,textFieldPantallaCompleta.getKeyCode()));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_DELETE_NUMBER,textFieldBorrar.getKeyCode()));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_NEXT_SONG,textFieldSaltarCancion.getKeyCode()));

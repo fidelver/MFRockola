@@ -6,10 +6,12 @@ package com.mfrockola.classes;
 public class Singer {
     private String name;
     private Song[] songs;
+    private String pathCover;
 
-    public Singer(String name, Song[] songs) {
+    public Singer(String name, Song[] songs, String pathCover) {
         setName(name);
         setSongs(songs);
+        setPathCover(pathCover);
     }
 
     public String getName() {
@@ -26,5 +28,13 @@ public class Singer {
 
     public void setSongs(Song[] songs) {
         this.songs = songs;
+    }
+
+    public String getPathCover() {
+        return pathCover;
+    }
+
+    public void setPathCover(String pathCover) {
+        this.pathCover = pathCover;
     }
 }

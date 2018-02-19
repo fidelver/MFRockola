@@ -4,6 +4,7 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -23,23 +24,23 @@ public class SingerList extends JPanel {
     private int selectedSinger;
     private int selectedCover;
 
-    private ArrayList<AlbumCover> singers;
+    private ArrayList<Singer> singers;
     private ArrayList<JLabel> covers;
 
-    public SingerList (int width, int height) {
+    public SingerList (int width, int height, ArrayList<Singer> singers) {
         this.width = width;
         this.height = height;
+        this.singers = singers;
 
         selectedSinger = 0;
         selectedCover = 0;
-        createSingersList();
 
         setLayout(new GridLayout(1,4));
         setOpaque(false);
 
         covers = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
-            ImageIcon cover = printCoverIcon(String.valueOf(i+1));
+            ImageIcon cover = printCoverIcon(singers.get(i).getPathCover());
             JLabel label = new JLabel(cover, JLabel.CENTER);
             label.setPreferredSize(new Dimension(height, height));
             label.setOpaque(false);
@@ -80,6 +81,10 @@ public class SingerList extends JPanel {
         }
     }
 
+    public int getSelectedSinger() {
+        return this.selectedSinger;
+    }
+
     private void updateBorder (int moveTo) {
         switch (moveTo) {
             case MOVE_TO_FIRST: {
@@ -105,20 +110,17 @@ public class SingerList extends JPanel {
         }
     }
 
-    public int getSelectedSinger() {
-        return selectedSinger;
-    }
-
     public void updateCovers (int moveTo) {
         removeAll();
         for (int i = 0; i < 4; i++) {
-            covers.add(new JLabel());
+            covers.add(new JLabel(printDefaultCover()));
         }
 
         switch (moveTo) {
             case (MOVE_TO_LEFT): {
                 for (int i = 0; i < 4; i++) {
-                    JLabel label = new JLabel(printCoverIcon(String.valueOf(((selectedSinger-3) +i+1))), JLabel.CENTER);
+                    JLabel label = new JLabel(printCoverIcon(singers.get((selectedSinger-3) + i).getPathCover()), JLabel.CENTER);
+//                    JLabel label = new JLabel(printCoverIcon(String.valueOf(((selectedSinger-3) +i+1))), JLabel.CENTER);
                     covers.set(i, label);
                     add(covers.get(i));
                 }
@@ -126,8 +128,9 @@ public class SingerList extends JPanel {
                 break;
             }
             case (MOVE_TO_RIGHT): {
-                for (int i = 0; i < 4; i++) {
-                    JLabel label = new JLabel(printCoverIcon(String.valueOf((selectedSinger+i+1))), JLabel.CENTER);
+                int limit = singers.size() - selectedSinger;
+                for (int i = 0; i < limit; i++) {
+                    JLabel label = new JLabel(printCoverIcon(singers.get(selectedSinger+i).getPathCover()), JLabel.CENTER);
                     covers.set(i, label);
                     add(covers.get(i));
                 }
@@ -137,10 +140,19 @@ public class SingerList extends JPanel {
         }
     }
 
+    private ImageIcon printDefaultCover() {
+        return null;
+    }
+
     private ImageIcon printCoverIcon(String path) {
         BufferedImage image = null;
         try {
-            image = ImageIO.read(this.getClass().getResource("/com/mfrockola/imagenes/"+ path +".jpg"));
+            File file = new File(path + ".jpg");
+            if (file.exists()) {
+                image = ImageIO.read(new File(path + ".jpg"));
+            } else {
+                image = ImageIO.read(this.getClass().getResource("/com/mfrockola/imagenes/default.jpg"));
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -148,13 +160,5 @@ public class SingerList extends JPanel {
 
         ImageIcon ii = new ImageIcon(resizedImage);
         return ii;
-    }
-
-    public void createSingersList() {
-        singers = new ArrayList<>();
-        for (int i = 0; i < 12; i++) {
-            AlbumCover albumCover = new AlbumCover(String.valueOf(i));
-            singers.add(albumCover);
-        }
     }
 }

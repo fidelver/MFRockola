@@ -23,6 +23,7 @@ public class ListMusic {
     private String path;
     private String pathPromVideos;
     private int selectedGender;
+    private int selectedSinger;
     private int songNumber;
 
     private String [] promVideos;
@@ -37,6 +38,7 @@ public class ListMusic {
         setListOfSongs(new ArrayList<>());
 
         selectedGender = 0;
+        selectedSinger = 0;
         countGender();
 
         random = new Random();
@@ -82,14 +84,6 @@ public class ListMusic {
         }
 
         Collections.sort(singers, Comparator.comparing(Singer::getName));
-
-        for (int i = 0; i < singers.size(); i++) {
-            System.out.println(singers.get(i).getName());
-                for (int j = 0; j < singers.get(i).getSongs().length; j++) {
-                    System.out.println(singers.get(i).getSongs()[j]);
-                }
-
-        }
     }
 
     public boolean upGender() {
@@ -116,6 +110,10 @@ public class ListMusic {
         return gender.get(selectedGender).getName();
     }
 
+    public String getNameOfSinger() {
+        return singers.get(selectedSinger).getName();
+    }
+
     public Song[] countSongs(File file) {
         String [] artistas = file.list();
 
@@ -130,6 +128,7 @@ public class ListMusic {
             File artista = new File(String.format("%s\\%s\\%s", path,file.getName(), artistas[i]));
 
             if (artista.isDirectory()) {
+                provisionalSinger = new ArrayList<>();
                 String [] canciones = artista.list();
 
                 for (int j = 0; j < canciones.length; j++) {
@@ -142,17 +141,18 @@ public class ListMusic {
                 }
             }
 
-            gender = new Song[provisionalGender.size()];
             singer = new Song[provisionalSinger.size()];
-
-            for (int k = 0; k < provisionalGender.size(); k++) {
-                gender[k] = provisionalGender.get(k);
-            }
 
             for (int k = 0; k < provisionalSinger.size(); k++) {
                 singer[k] = provisionalSinger.get(k);
             }
-            singers.add(new Singer(artista.getName(), singer));
+            singers.add(new Singer(artista.getName(), singer, String.format("%s\\%s\\%s\\cover",path,file.getName(),artista.getName())));
+
+            gender = new Song[provisionalGender.size()];
+
+            for (int k = 0; k < provisionalGender.size(); k++) {
+                gender[k] = provisionalGender.get(k);
+            }
         }
         return gender;
     }
@@ -167,6 +167,10 @@ public class ListMusic {
 
     public Song[] getGenderSongs(int i) {
         return gender.get(i).getSongs();
+    }
+
+    public Song[] getSingerSongs() {
+        return singers.get(selectedSinger).getSongs();
     }
 
     public String getPromVideo() {
@@ -209,7 +213,15 @@ public class ListMusic {
         return genderTop30;
     }
 
+    public ArrayList<Singer> getSingers() {
+        return this.singers;
+    }
+
     public void setSingers(ArrayList<Singer> singers) {
         this.singers = singers;
+    }
+
+    public void setSelectedSinger(int selectedSinger) {
+        this.selectedSinger = selectedSinger;
     }
 }

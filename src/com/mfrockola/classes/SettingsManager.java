@@ -39,6 +39,11 @@ public class SettingsManager {
     static final String KEY_DOWN_LIST = "keyDownList";
     static final String KEY_UP_GENRE = "keyUpGenre";
     static final String KEY_DOWN_GENRE = "keyDownGenre";
+    static final String KEY_UP_LIST_MODE_SINGERS = "keyUpListModeSingers";
+    static final String KEY_DOWN_LIST_MODE_SINGERS = "keyDownListModeSingers";
+    static final String KEY_LEFT_COVERS_MODE_SINGERS = "keyLeftCoversModeSingers";
+    static final String KEY_RIGHT_COVERS_MODE_SINGERS = "keyRightCoversModeSingers";
+    static final String KEY_PLAY_SONG_MODE_SINGERS = "keyPlaySongModeSingers";
     static final String KEY_FULL_SCREEN = "keyFullScreen";
     static final String KEY_DELETE_NUMBER = "keyDeleteNumber";
     static final String KEY_NEXT_SONG = "keyNextSong";
@@ -206,6 +211,11 @@ public class SettingsManager {
         newSettings.add(new KeyPairValue(KEY_DOWN_LIST,111));
         newSettings.add(new KeyPairValue(KEY_UP_GENRE,107));
         newSettings.add(new KeyPairValue(KEY_DOWN_GENRE,109));
+        newSettings.add(new KeyPairValue(KEY_UP_LIST_MODE_SINGERS,38));
+        newSettings.add(new KeyPairValue(KEY_DOWN_LIST_MODE_SINGERS,40));
+        newSettings.add(new KeyPairValue(KEY_LEFT_COVERS_MODE_SINGERS,37));
+        newSettings.add(new KeyPairValue(KEY_RIGHT_COVERS_MODE_SINGERS,39));
+        newSettings.add(new KeyPairValue(KEY_PLAY_SONG_MODE_SINGERS, 10));
         newSettings.add(new KeyPairValue(KEY_FULL_SCREEN,70));
         newSettings.add(new KeyPairValue(KEY_DELETE_NUMBER,67));
         newSettings.add(new KeyPairValue(KEY_NEXT_SONG,78));

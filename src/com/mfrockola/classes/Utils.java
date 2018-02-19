@@ -30,6 +30,10 @@ class Utils {
 
         String extension = path.substring(index+1);
 
+        if (extension.equals("ini") || extension.equals("INI")) {
+            return EXT_UNKNOWN;
+        }
+
         if (extension.equals("jpg") || extension.equals("JPG")) {
             return EXT_UNKNOWN;
         }
@@ -103,6 +107,14 @@ class Utils {
                 return "FIN";
             case 36:
                 return "INIC";
+            case 37:
+                return "IZQUI";
+            case 38:
+                return "ARRIBA";
+            case 39:
+                return "DERECH";
+            case 40:
+                return "ABAJO";
             case 44:
                 return ",";
             case 45:

@@ -15,7 +15,7 @@ class PlayList {
 
     void addSong (Song song, int type) {
         song.setType(type);
-        if (mPlayList.size()> 0) {
+        if (mPlayList.size()> 0 && (type == Song.VIP || type == Song.SUPER_VIP)) {
             mPlayList.add(findPosition(type) + 1, song);
         } else {
             mPlayList.add(song);
@@ -65,25 +65,38 @@ class PlayList {
 
     private int findPosition(int type) {
         int position = 0;
-        int lastSuperVIP = 0;
         int size = mPlayList.size();
 
         Song song;
 
-        for (int i = 0; i < size; i++) {
-            song = mPlayList.get(i);
-            if (song.getType() == Song.SUPER_VIP) {
-                lastSuperVIP = position = i;
+        switch (type) {
+            case Song.SUPER_VIP: {
+                for (int i = 0; i < size; i++) {
+                    song = mPlayList.get(i);
+                    if (song.getType() == Song.SUPER_VIP) {
+                        position = i;
+                    }
+                }
+                return position;
             }
-        }
+            case Song.VIP: {
+                for (int i = 0; i < size; i++) {
+                    song = mPlayList.get(i);
+                    if (song.getType() == Song.SUPER_VIP) {
+                        position = i;
+                    }
+                }
 
-        for (int i = lastSuperVIP; i < size; i++) {
-            song = mPlayList.get(i);
-            if (song.getType() == type) {
-                position = i;
+                for (int i = position; i < size; i++) {
+                    song = mPlayList.get(i);
+                    if (song.getType() == Song.VIP) {
+                        position = i;
+                    }
+                }
+                return position;
             }
         }
-        return position;
+        return 0;
     }
 
     Object[] getPlayList(){
