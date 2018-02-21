@@ -115,6 +115,7 @@ class Interface extends JFrame {
     // Panel containing the video surface
     private JPanel videoPanel;
     private JPanel panel;
+    private VipSelector mPanelVipSelector;
 
     // Panel containing the bottom interface information
     private JPanel bottomPanel;
@@ -136,6 +137,7 @@ class Interface extends JFrame {
     private JLabel labelSongPlayingRight;
     private JLabel labelCredits;
     private JLabel labelPromotions;
+    private JList listVIP;
 
     // MediaPlayer object that has the video player
     private MediaPlayer mMediaPlayer;
@@ -157,6 +159,7 @@ class Interface extends JFrame {
 
     // Bars for the list of songs
     private JScrollPane mScrollPane;
+    private JScrollPane mScrollpaneVIP;
 
     private JScrollPane mSingerPane;
     private SingerList mSingerList;
@@ -253,7 +256,7 @@ class Interface extends JFrame {
                                 songJSON.getInt(KEY_SONG_NUMBER),
                                 songJSON.getString(KEY_SONG_GENRE),
                                 songJSON.getString(KEY_SONG_SINGER),
-                                songJSON.getString(KEY_SONG_NAME)),
+                                songJSON.getString(KEY_SONG_NAME), modeGenreList),
                                 Song.NORMAL);
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -408,14 +411,22 @@ class Interface extends JFrame {
                         pathVideosMP3 + "\\" + listMusicData.getPromVideo());
             }
 
-            labelSongPlayingBottom.setText(String.format("%05d - %s - %s - %s",
-                    mPlayList.getSongNumber(),
-                    mPlayList.getSongGender(),
-                    mPlayList.getSinger(),
-                    mPlayList.songToPlay()));
-            labelSongPlayingRight.setText(String.format("%05d - %s - %s - %s",
-                    mPlayList.getSongNumber(),mPlayList.getSongGender(),
-                    mPlayList.getSinger(), mPlayList.songToPlay()));
+            if (modeGenreList) {
+                labelSongPlayingBottom.setText(String.format("%05d - %s - %s - %s",
+                        mPlayList.getSongNumber(),
+                        mPlayList.getSongGender(),
+                        mPlayList.getSinger(),
+                        mPlayList.songToPlay()));
+                labelSongPlayingRight.setText(String.format("%05d - %s - %s - %s",
+                        mPlayList.getSongNumber(),mPlayList.getSongGender(),
+                        mPlayList.getSinger(), mPlayList.songToPlay()));
+            } else {
+                labelSongPlayingBottom.setText(String.format("%s - %s",
+                        mPlayList.getSinger(),
+                        mPlayList.songToPlay()));
+                labelSongPlayingRight.setText(String.format("%s - %s",
+                        mPlayList.getSinger(), mPlayList.songToPlay()));
+            }
         }
 
         addMouseListener(new MouseAdapter() {
@@ -542,29 +553,15 @@ class Interface extends JFrame {
         labelSongPlayingBottom.setForeground(Color.WHITE);
         labelSongPlayingBottom.setFont(new Font("Calibri", Font.BOLD, 23));
 
-        Icon icon = new ImageIcon(this.getClass().getResource("/com/mfrockola/imagenes/promocionLabel.png"));
-        labelPromotions = new JLabel("Aqui van las promociones",icon,JLabel.CENTER);
-        labelPromotions.setVerticalTextPosition(JLabel.BOTTOM);
-        labelPromotions.setHorizontalTextPosition(JLabel.CENTER);
-        labelPromotions.setForeground(Color.BLACK);
-        labelPromotions.setBorder(BorderFactory.createLineBorder(Color.BLACK,3));
-        labelPromotions.setFont(new Font("Calibri", Font.BOLD, 23));
-        labelPromotions.setHorizontalAlignment(SwingConstants.CENTER);
-        labelPromotions.setVisible(false);
-        labelPromotions.setOpaque(true);
-        labelPromotions.setBackground(Color.WHITE);
-        labelPromotions.setBounds((widthScreen/2)-250,(heightScreen/2)-80,500,160);
-
         // Iniciar las listas
 
-        listMusicData = new ListMusic(pathSongs,pathVideosMP3); //Aqui falta la direccion de los videos promocionales
+        listMusicData = new ListMusic(modeGenreList,pathSongs,pathVideosMP3); //Aqui falta la direccion de los videos promocionales
 
         // Iniciar los panel
 
         JPanel mainPanel = new JPanel();
         mainPanel.setOpaque(false);
         mainPanel.setLayout(null);
-        mainPanel.add(labelPromotions);
         mainPanel.add(mScrollPane);
 
         mainPanel.add(labelMusicalGenre);
@@ -610,8 +607,6 @@ class Interface extends JFrame {
         panel.add(panelRight);
         panelRight.setLayout(new GridLayout(3, 1, 0, 0));
         panelRight.add(labelSongPlayingRight);
-
-        panelRight.add(mSongSelector.labelSelector);
 
         mainPanel.add(playListInterface);
     }
@@ -673,9 +668,13 @@ class Interface extends JFrame {
         labelPromotions.setBackground(Color.WHITE);
         labelPromotions.setBounds((widthScreen/2)-250,(heightScreen/2)-80,500,160);
 
+        mPanelVipSelector = new VipSelector();
+        mPanelVipSelector.setBounds((widthScreen/2)-200,(heightScreen/2)-90,400,180);
+        mPanelVipSelector.setVisible(false);
+
         // Iniciar las listas
 
-        listMusicData = new ListMusic(pathSongs,pathVideosMP3); //Aqui falta la direccion de los videos promocionales
+        listMusicData = new ListMusic(modeGenreList,pathSongs,pathVideosMP3); //Aqui falta la direccion de los videos promocionales
 
         mSongListInterface = new JList();
         mSongListInterface.setCellRenderer(new RowRenderer(new Font(fontCells,
@@ -728,6 +727,7 @@ class Interface extends JFrame {
         mainPanel.setOpaque(false);
         mainPanel.setLayout(null);
         mainPanel.add(labelPromotions);
+        mainPanel.add(mPanelVipSelector);
         mainPanel.add(mScrollPane);
 
         mainPanel.add(labelMusicalGenre);
@@ -868,7 +868,30 @@ class Interface extends JFrame {
             }
 
             if (evento.getKeyCode()== keyPlaySongModeSingers && !modeGenreList) {
-                if (credits > 1 && enableVip) {
+                if (isFullScreen) {
+                    setFullScreen();
+                } else  if (mPanelVipSelector.isVisible()) {
+                    switch (mPanelVipSelector.getSelection()) {
+                        case 0: {
+                            selectionVIP = Song.NORMAL;
+                            break;
+                        }
+                        case 1: {
+                            selectionVIP = Song.VIP;
+                            break;
+                        }
+                        case 2: {
+                            selectionVIP = Song.SUPER_VIP;
+                            break;
+                        }
+                    }
+
+                    mPanelVipSelector.setInitialSelection();
+                    mPanelVipSelector.setVisible(false);
+                    Song song = (Song) mSongListInterface.getSelectedValue();
+                    playOneSong(song.getSongNumber());
+                    selectVIP = false;
+                } else if (credits > 1 && enableVip) {
                     enableVIP();
                 } else if (credits > 0) {
                     Song song = (Song) mSongListInterface.getSelectedValue();
@@ -876,7 +899,7 @@ class Interface extends JFrame {
                 }
             }
 
-            if (((evento.getKeyCode() > 47 && evento.getKeyCode() < 58) || (evento.getKeyCode() > 95 && evento.getKeyCode() < 106)) && (credits > 0 || !lockScreen)) {
+            if (((evento.getKeyCode() > 47 && evento.getKeyCode() < 58) || (evento.getKeyCode() > 95 && evento.getKeyCode() < 106)) && (credits > 0 || !lockScreen) && modeGenreList) {
                 if (selectVIP) {
                     checkVIP(evento);
                 } else {
@@ -933,23 +956,27 @@ class Interface extends JFrame {
                     mSongListInterface.setSelectedIndex(mSongListInterface.getSelectedIndex()-20);
                     mSongListInterface.ensureIndexIsVisible(mSongListInterface.getSelectedIndex());
                 }
-            } else if(evento.getKeyCode()==keyUpListModeSingers && (credits > 0 || !lockScreen) && !modeGenreList && !selectVIP) {
+            } else if(evento.getKeyCode()==keyUpListModeSingers && (credits > 0 || !lockScreen) && !modeGenreList) {
                 if (isFullScreen) {
                     setFullScreen();
                 }
 
-                if(mSongListInterface.getSelectedIndex() > 0) {
+                if (mPanelVipSelector.isVisible()) {
+                    mPanelVipSelector.setSelection(VipSelector.KEY_UP);
+                } else if(mSongListInterface.getSelectedIndex() > 0 && !selectVIP) {
                     mSongListInterface.setSelectedIndex(mSongListInterface.getSelectedIndex()-1);
                     mSongListInterface.ensureIndexIsVisible(mSongListInterface.getSelectedIndex());
                 } else {
                     evento.consume();
                 }
-            } else if(evento.getKeyCode()==keyDownListModeSingers && (credits > 0 || !lockScreen) && !modeGenreList && !selectVIP) {
+            } else if(evento.getKeyCode()==keyDownListModeSingers && (credits > 0 || !lockScreen) && !modeGenreList) {
                 if (isFullScreen) {
                     setFullScreen();
                 }
 
-                if(mSongListInterface.getSelectedIndex()+1 >= listMusicData.getSingerSongs().length) {
+                if (mPanelVipSelector.isVisible()) {
+                    mPanelVipSelector.setSelection(VipSelector.KEY_DOWN);
+                } else if(mSongListInterface.getSelectedIndex()+1 >= listMusicData.getSingerSongs().length && !selectVIP) {
                     evento.consume();
                 } else {
                     mSongListInterface.setSelectedIndex(mSongListInterface.getSelectedIndex()+1);
@@ -1141,7 +1168,12 @@ class Interface extends JFrame {
                 labelPromotions.setText("Presione 1 Normal, 2 VIP, 3 Super VIP");
             }
 
-            labelPromotions.setVisible(true);
+            if (modeGenreList) {
+                labelPromotions.setVisible(true);
+            } else {
+                mPanelVipSelector.setLabelsEnabled(credits);
+                mPanelVipSelector.setVisible(true);
+            }
         }
 
         private void consumirCancion(int numero) {
@@ -1179,14 +1211,24 @@ class Interface extends JFrame {
                 mSongSelector.resetValues();
                 mSongSelector.labelSelector.setText("- - - - -");
                 mBlockedSongs.blockSong(numero);
-                labelSongPlayingBottom.setText(String.format("%05d - %s - %s - %s",
-                        mPlayList.getSongNumber(),
-                        mPlayList.getSongGender(),
-                        mPlayList.getSinger(),
-                        mPlayList.songToPlay()));
-                labelSongPlayingRight.setText(String.format("%05d - %s - %s - %s",
-                        mPlayList.getSongNumber(),mPlayList.getSongGender(),
-                        mPlayList.getSinger(), mPlayList.songToPlay()));
+                if (modeGenreList) {
+                    labelSongPlayingBottom.setText(String.format("%05d - %s - %s - %s",
+                            mPlayList.getSongNumber(),
+                            mPlayList.getSongGender(),
+                            mPlayList.getSinger(),
+                            mPlayList.songToPlay()));
+                    labelSongPlayingRight.setText(String.format("%05d - %s - %s - %s",
+                            mPlayList.getSongNumber(),mPlayList.getSongGender(),
+                            mPlayList.getSinger(), mPlayList.songToPlay()));
+
+                } else {
+                    labelSongPlayingBottom.setText(String.format("%s - %s",
+                            mPlayList.getSinger(),
+                            mPlayList.songToPlay()));
+                    labelSongPlayingRight.setText(String.format("%s - %s",
+                            mPlayList.getSinger(), mPlayList.songToPlay()));
+
+                }
                 if (credits == 0 && !free) {
                     timerFullScreen.restart();
                 }
@@ -1334,17 +1376,24 @@ class Interface extends JFrame {
                             pathVideosMP3 + "\\" + listMusicData.getPromVideo());
                 }
 
-                labelSongPlayingBottom.setText(String.format("%05d - %s - %s - %s",
-                        mPlayList.getSongNumber(),
-                        mPlayList.getSongGender(),
-                        mPlayList.getSinger(),
-                        mPlayList.songToPlay()));
+                if (modeGenreList) {
+                    labelSongPlayingBottom.setText(String.format("%05d - %s - %s - %s",
+                            mPlayList.getSongNumber(),
+                            mPlayList.getSongGender(),
+                            mPlayList.getSinger(),
+                            mPlayList.songToPlay()));
+                    labelSongPlayingRight.setText(String.format("%05d - %s - %s - %s",
+                            mPlayList.getSongNumber(),mPlayList.getSongGender(),
+                            mPlayList.getSinger(), mPlayList.songToPlay()));
+                } else {
+                    labelSongPlayingBottom.setText(String.format("%s - %s",
+                            mPlayList.getSinger(),
+                            mPlayList.songToPlay()));
 
-                labelSongPlayingRight.setText(String.format("%05d - %s - %s - %s",
-                        mPlayList.getSongNumber(),
-                        mPlayList.getSongGender(),
-                        mPlayList.getSinger(),
-                        mPlayList.songToPlay()));
+                    labelSongPlayingRight.setText(String.format("%s - %s",
+                            mPlayList.getSinger(),
+                            mPlayList.songToPlay()));
+                }
             }
         }
     }

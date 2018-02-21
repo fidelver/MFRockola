@@ -17,6 +17,7 @@ public class ListMusic {
     public static final int COUNT_SONGS_BY_SINGERS = 1;
 
 
+    private boolean mode;
     private ArrayList <Song> listOfSongs;
     private ArrayList<Gender> gender;
     private ArrayList<Singer> singers;
@@ -30,7 +31,8 @@ public class ListMusic {
 
     private Random random;
 
-    public ListMusic (String path, String pathPromVideos) {
+    public ListMusic (boolean mode, String path, String pathPromVideos) {
+        setMode(mode);
         setPath(path);
         setPathPromVideos(pathPromVideos);
         setGender(new ArrayList<>());
@@ -133,9 +135,9 @@ public class ListMusic {
 
                 for (int j = 0; j < canciones.length; j++) {
                     if (Utils.getExtension(String.format("%s\\%s\\%s\\%s",path,file.getName(),artista.getName(),canciones[j]))!= Utils.EXT_UNKNOWN) {
-                        provisionalGender.add(new Song(songNumber,file.getName(),artista.getName(),canciones[j]));
-                        provisionalSinger.add(new Song(songNumber, file.getName(), artista.getName(), canciones[j]));
-                        listOfSongs.add(new Song(songNumber,file.getName(),artista.getName(),canciones[j]));
+                        provisionalGender.add(new Song(songNumber,file.getName(),artista.getName(),canciones[j], mode));
+                        provisionalSinger.add(new Song(songNumber, file.getName(), artista.getName(), canciones[j], mode));
+                        listOfSongs.add(new Song(songNumber,file.getName(),artista.getName(),canciones[j], mode));
                         songNumber++;
                     }
                 }
@@ -198,7 +200,7 @@ public class ListMusic {
                 songs[i] = new Song(resultSet.getInt("number"),
                         resultSet.getString("genre"),
                         resultSet.getString("artist"),
-                        resultSet.getString("name"));
+                        resultSet.getString("name"), mode);
                 i++;
             }
 
@@ -223,5 +225,13 @@ public class ListMusic {
 
     public void setSelectedSinger(int selectedSinger) {
         this.selectedSinger = selectedSinger;
+    }
+
+    public boolean isMode() {
+        return mode;
+    }
+
+    public void setMode(boolean mode) {
+        this.mode = mode;
     }
 }

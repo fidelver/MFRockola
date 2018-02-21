@@ -13,9 +13,10 @@ class Song {
 	private String singer;
 	private String songName;
 	private int type;
+	private boolean mode;
 
 	// Constructor to start variables
-	Song(int songNumber, String songGenre, String singer, String songName) {
+	Song(int songNumber, String songGenre, String singer, String songName, boolean mode) {
 		setSongNumber(songNumber);
 		setSongGenre(songGenre);
 		setSinger(singer);
@@ -68,6 +69,18 @@ class Song {
 	// Override the toString method in order to print the song name correctly on the interface
 	@Override
 	public String toString() {
-		return String.format("%05d - %s - %s", getSongNumber(),getSinger(), getSongName());
+		if (isMode()) {
+			return String.format("%05d - %s - %s", getSongNumber(),getSinger(), getSongName());
+		} else {
+			return getSongName();
+		}
+	}
+
+	public boolean isMode() {
+		return mode;
+	}
+
+	public void setMode(boolean mode) {
+		this.mode = mode;
 	}
 }
