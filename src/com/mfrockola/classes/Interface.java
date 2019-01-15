@@ -34,6 +34,7 @@ class Interface extends JFrame {
     private boolean promotionalVideo;
     private boolean defaultPromotionalVideo;
     private String pathPromotionalVideo;
+    private String mRutaVideosPromocionales;
 
     private int amountOfCredits;
     private boolean free;
@@ -176,6 +177,7 @@ class Interface extends JFrame {
             promotionalVideo = (boolean) mUserSettings.getSetting(KEY_PROMOTIONAL_VIDEO);
             defaultPromotionalVideo = (boolean) mUserSettings.getSetting(KEY_DEFAULT_PROMOTIONAL_VIDEO);
             pathPromotionalVideo = (String) mUserSettings.getSetting(KEY_PATH_PROMOTIONAL_VIDEO);
+            mRutaVideosPromocionales = (String) mUserSettings.getSetting(KEY_PATH_PROMOTIONAL_VIDEOS);
 
             amountOfCredits = (int) mUserSettings.getSetting(KEY_AMOUNT_OF_CREDITS);
             free = (boolean) mUserSettings.getSetting(KEY_FREE);
@@ -296,6 +298,16 @@ class Interface extends JFrame {
                         "Error de directorios",
                         JOptionPane.WARNING_MESSAGE);
             }
+
+            file = new File(mRutaVideosPromocionales);
+
+            if (!file.exists()) {
+                JOptionPane.showMessageDialog(
+                        null,
+                        "La ruta de videos promocionales no se encuentra",
+                        "Error de directorios",
+                        JOptionPane.WARNING_MESSAGE);
+            }
         }
         catch (NullPointerException excepcion) {
             excepcion.printStackTrace();
@@ -348,10 +360,6 @@ class Interface extends JFrame {
         timerRandomSong = new Timer(randomSong*1000*60,play);
         timerRandomSong.setRepeats(false);
 
-        if (mPlayList.songToPlay()==null) {
-            timerRandomSong.start();
-        }
-
         getContentPane().add(mBackgroundImagePanel);
 
         setUndecorated(true);
@@ -367,6 +375,14 @@ class Interface extends JFrame {
         if(promotionalVideo) {
             mMediaPlayer.embeddedMediaPlayer.playMedia(pathPromotionalVideo);
             setFullScreen();
+        }
+
+        if (mPlayList.songToPlay()==null) {
+            if (randomSong == 0) {
+                playRandomSong();
+            } else {
+                timerRandomSong.start();
+            }
         }
 
         if (mPlayList.songToPlay()!=null) {
@@ -1108,8 +1124,23 @@ class Interface extends JFrame {
     }
 
     public void playRandomSong(){
-
         Random random = new Random();
+        if (randomSong == 0) {
+            File file = new File(mRutaVideosPromocionales);
+            if (file.isDirectory()) {
+                String [] list = file.list();
+                random = new Random();
+                int rand = random.nextInt(list.length);
+                System.out.println(rand);
+                int extension = Utils.getExtension(String.format("%s\\%s", mRutaVideosPromocionales,list[rand]));
+                if (extension == EXT_MP4 || extension == EXT_AVI || extension == EXT_MPG || extension == EXT_FLV || extension == EXT_MKV) {
+                    mMediaPlayer.playVideo(mRutaVideosPromocionales + "\\" + list[rand]);
+                } else if (extension == EXT_MP3 || extension == EXT_WMA || extension == EXT_WAV || extension == EXT_AAC) {
+                    mMediaPlayer.playAudio(mRutaVideosPromocionales + "\\" + list[rand], pathPromotionalVideo);
+                }
+                return;
+            }
+        }
 
         mPlayList.addSong(listMusicData.getSong(random.nextInt(listMusicData.getSizeListOfSongs())));
 
