@@ -31,9 +31,6 @@ class Interface extends JFrame {
 
     private int randomSong;
     private int resetSongs;
-    private boolean promotionalVideo;
-    private boolean defaultPromotionalVideo;
-    private String pathPromotionalVideo;
     private String mRutaVideosPromocionales;
 
     private int amountOfCredits;
@@ -174,9 +171,6 @@ class Interface extends JFrame {
 
             randomSong = (int) mUserSettings.getSetting(KEY_RANDOM_SONG);
             resetSongs = (int) mUserSettings.getSetting(KEY_RESET_SONGS);
-            promotionalVideo = (boolean) mUserSettings.getSetting(KEY_PROMOTIONAL_VIDEO);
-            defaultPromotionalVideo = (boolean) mUserSettings.getSetting(KEY_DEFAULT_PROMOTIONAL_VIDEO);
-            pathPromotionalVideo = (String) mUserSettings.getSetting(KEY_PATH_PROMOTIONAL_VIDEO);
             mRutaVideosPromocionales = (String) mUserSettings.getSetting(KEY_PATH_PROMOTIONAL_VIDEOS);
 
             amountOfCredits = (int) mUserSettings.getSetting(KEY_AMOUNT_OF_CREDITS);
@@ -289,16 +283,6 @@ class Interface extends JFrame {
                 System.exit(-1);
             }
 
-            file = new File(pathPromotionalVideo);
-
-            if (!file.exists()) {
-                JOptionPane.showMessageDialog(
-                        null,
-                        "El video promocional no se encuentra, verifique la ruta.",
-                        "Error de directorios",
-                        JOptionPane.WARNING_MESSAGE);
-            }
-
             file = new File(mRutaVideosPromocionales);
 
             if (!file.exists()) {
@@ -371,11 +355,6 @@ class Interface extends JFrame {
 
         mMediaPlayer.embeddedMediaPlayer.addMediaPlayerEventListener(sMediaPlayerManager);
         mMediaPlayer.embeddedMediaPlayerMp3.addMediaPlayerEventListener(sMediaPlayerManager);
-
-        if(promotionalVideo) {
-            mMediaPlayer.embeddedMediaPlayer.playMedia(pathPromotionalVideo);
-            setFullScreen();
-        }
 
         if (mPlayList.songToPlay()==null) {
             if (randomSong == 0) {
@@ -1046,7 +1025,7 @@ class Interface extends JFrame {
             if (mMediaPlayer.embeddedMediaPlayerMp3.isPlaying()) {
                 String path = pathVideosMP3 + "\\" + listMusicData.getPromVideo();
                 File file = new File(path);
-                mMediaPlayer.embeddedMediaPlayer.playMedia(file.getAbsolutePath());
+                mMediaPlayer.playVideo(file.getAbsolutePath());
             } else {
                 nextSong();
             }
@@ -1062,14 +1041,8 @@ class Interface extends JFrame {
 
             if (mPlayList.songToPlay() == null) {
                 timerRandomSong.start();
-                if (promotionalVideo) {
-                    mMediaPlayer.embeddedMediaPlayer.playMedia(pathPromotionalVideo);
-                    labelSongPlayingBottom.setText("MFRockola");
-                    labelSongPlayingRight.setText("Su selección musical");
-                } else {
-                    labelSongPlayingBottom.setText("MFRockola");
-                    labelSongPlayingRight.setText("Su selección musical");
-                }
+                labelSongPlayingBottom.setText("MFRockola");
+                labelSongPlayingRight.setText("Su selección musical");
             } else {
                 int extension = Utils.getExtension(String.format("%s\\%s\\%s\\%s", pathSongs,mPlayList.getSongGender(),mPlayList.getSinger(), mPlayList.songToPlay()));
 
@@ -1150,6 +1123,14 @@ class Interface extends JFrame {
                 }
 
                 playListInterface.setListData(mPlayList.getPlayList());
+                labelSongPlayingBottom.setText(String.format("%05d - %s - %s - %s",
+                        mPlayList.getSongNumber(),
+                        mPlayList.getSongGender(),
+                        mPlayList.getSinger(),
+                        mPlayList.songToPlay()));
+                labelSongPlayingRight.setText(String.format("%05d - %s - %s - %s",
+                        mPlayList.getSongNumber(),mPlayList.getSongGender(),
+                        mPlayList.getSinger(), mPlayList.songToPlay()));
                 return;
             }
         }
