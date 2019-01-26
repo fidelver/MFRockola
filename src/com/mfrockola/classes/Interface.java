@@ -1129,15 +1129,27 @@ class Interface extends JFrame {
             File file = new File(mRutaVideosPromocionales);
             if (file.isDirectory()) {
                 String [] list = file.list();
+                if (list.length == 0) return;
                 random = new Random();
                 int rand = random.nextInt(list.length);
-                System.out.println(rand);
-                int extension = Utils.getExtension(String.format("%s\\%s", mRutaVideosPromocionales,list[rand]));
+                String song = list[rand];
+                mPlayList.addSong(new Song(0,"Promocionales", "Promocionales", song));
+
+                int extension = Utils.getExtension(song);
+
                 if (extension == EXT_MP4 || extension == EXT_AVI || extension == EXT_MPG || extension == EXT_FLV || extension == EXT_MKV) {
-                    mMediaPlayer.playVideo(mRutaVideosPromocionales + "\\" + list[rand]);
+                    mMediaPlayer.playVideo(mPlayList.getSongGender(),mPlayList.getSinger(),mPlayList.songToPlay());
                 } else if (extension == EXT_MP3 || extension == EXT_WMA || extension == EXT_WAV || extension == EXT_AAC) {
-                    mMediaPlayer.playAudio(mRutaVideosPromocionales + "\\" + list[rand], pathPromotionalVideo);
+                    String promVideo = listMusicData.getPromVideo();
+                    System.out.println(promVideo);
+                    mMediaPlayer.playAudio(
+                            mPlayList.getSongGender(),
+                            mPlayList.getSinger(),
+                            mPlayList.songToPlay(),
+                            pathVideosMP3 + "\\" + promVideo);
                 }
+
+                playListInterface.setListData(mPlayList.getPlayList());
                 return;
             }
         }
