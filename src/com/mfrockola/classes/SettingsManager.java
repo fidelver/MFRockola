@@ -17,10 +17,6 @@ public class SettingsManager {
     // Panel TIME
     static final String KEY_RANDOM_SONG = "randomSong";
     static final String KEY_RESET_SONGS = "resetSongs";
-    static final String KEY_PROMOTIONAL_VIDEO = "promotionalVideo";
-    static final String KEY_DEFAULT_PROMOTIONAL_VIDEO = "defaultPromotionalVideo";
-    static final String KEY_PATH_PROMOTIONAL_VIDEO = "pathPromotionalVideo";
-    static final String KEY_PATH_PROMOTIONAL_VIDEOS = "rutaVideosPromocionales";
 
     // Panel CREDITS
     static final String KEY_AMOUNT_OF_CREDITS = "amountOfCredits";
@@ -183,10 +179,6 @@ public class SettingsManager {
         // Panel TIME
         newSettings.add(new KeyPairValue(KEY_RANDOM_SONG, 1));
         newSettings.add(new KeyPairValue(KEY_RESET_SONGS,15));
-        newSettings.add(new KeyPairValue(KEY_PROMOTIONAL_VIDEO,true));
-        newSettings.add(new KeyPairValue(KEY_DEFAULT_PROMOTIONAL_VIDEO,true));
-        newSettings.add(new KeyPairValue(KEY_PATH_PROMOTIONAL_VIDEO,"C:\\MFRockola\\Videos para MP3\\promotional.mpg"));
-        newSettings.add(new KeyPairValue(KEY_PATH_PROMOTIONAL_VIDEOS,"C:\\MFRockola\\Videos promocionales\\"));
 
         // Panel CREDITS
         newSettings.add(new KeyPairValue(KEY_AMOUNT_OF_CREDITS,1));

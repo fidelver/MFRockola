@@ -31,7 +31,6 @@ class Interface extends JFrame {
 
     private int randomSong;
     private int resetSongs;
-    private String mRutaVideosPromocionales;
 
     private int amountOfCredits;
     private boolean free;
@@ -171,7 +170,6 @@ class Interface extends JFrame {
 
             randomSong = (int) mUserSettings.getSetting(KEY_RANDOM_SONG);
             resetSongs = (int) mUserSettings.getSetting(KEY_RESET_SONGS);
-            mRutaVideosPromocionales = (String) mUserSettings.getSetting(KEY_PATH_PROMOTIONAL_VIDEOS);
 
             amountOfCredits = (int) mUserSettings.getSetting(KEY_AMOUNT_OF_CREDITS);
             free = (boolean) mUserSettings.getSetting(KEY_FREE);
@@ -281,16 +279,6 @@ class Interface extends JFrame {
                         "Error de Directorios",
                         JOptionPane.ERROR_MESSAGE);
                 System.exit(-1);
-            }
-
-            file = new File(mRutaVideosPromocionales);
-
-            if (!file.exists()) {
-                JOptionPane.showMessageDialog(
-                        null,
-                        "La ruta de videos promocionales no se encuentra",
-                        "Error de directorios",
-                        JOptionPane.WARNING_MESSAGE);
             }
         }
         catch (NullPointerException excepcion) {
@@ -1099,7 +1087,7 @@ class Interface extends JFrame {
     public void playRandomSong(){
         Random random = new Random();
         if (randomSong == 0) {
-            File file = new File(mRutaVideosPromocionales);
+            File file = new File(pathSongs + "\\Promocionales\\Promocionales");
             if (file.isDirectory()) {
                 String [] list = file.list();
                 if (list.length == 0) return;

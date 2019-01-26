@@ -24,7 +24,6 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 	private JTextField textFieldCantCreditos;
 	private JTextField textFieldMusicaAleatoria;
 	private JTextField textFieldReinicioMusicas;
-	private JTextField textFieldRutaVideosPromocionales;
 	private TextFieldKey textFieldSubirL;
 	private TextFieldKey textFieldBajarL;
 	private TextFieldKey textFieldSubirGenero;
@@ -59,8 +58,6 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 	private JRadioButton rdbtnClickIzquierdo;
 	private JRadioButton rdbtnClickDerecho;
 	private boolean libre;
-	private boolean videoPromocional;
-	private boolean defaultVideoPromotional;
 	private boolean defaultBackground;
 	private boolean cancelMusic;
 	private boolean selectVideoProm;
@@ -84,8 +81,6 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 	private JButton botonColor1; // boton selector de color de celda 1
 	private JButton botonColor2; // boton selector de color de celda 2
 	private JButton botonColorDeFuente; // boton selector del color de la fuente
-	private JButton buttonPathPromotionalVideo; // boton del selector de videos promocionales
-	private JButton buttonRutaVideosPromocionales; // boton del selector de videos promocionales
 	private JComboBox<String> comboBoxSelectorDeFuente; // comboBox de fuentes disponibles
 	private JComboBox<String> comboBoxTamanioDeFuente; // comboBox de tamaño de fuente de celdas
 	private JComboBox<String> comboBoxTamanioDeFuenteSelector; // comboBox de tamaño de fuente de selector de musicas
@@ -226,29 +221,6 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		textFieldReinicioMusicas.setColumns(10);
 		textFieldReinicioMusicas.setBounds(455, 171, 86, 31);
 		panel2.add(textFieldReinicioMusicas);
-
-		JLabel lblRutaVideosPromocionales = new JLabel("Ruta de videos promocionales");
-		lblRutaVideosPromocionales.setFont(new Font("Calibri", Font.PLAIN, 12));
-		lblRutaVideosPromocionales.setBounds(190, 273, 275, 27);
-		panel2.add(lblRutaVideosPromocionales);
-
-		textFieldRutaVideosPromocionales = new JTextField();
-//		textFieldRutaVideosPromocionales.setEnabled(false);
-		textFieldRutaVideosPromocionales.setHorizontalAlignment(SwingConstants.LEFT);
-		textFieldRutaVideosPromocionales.setFont(new Font("Calibri", Font.PLAIN, 13));
-		textFieldRutaVideosPromocionales.setColumns(10);
-		textFieldRutaVideosPromocionales.setBounds(364, 275, 177, 23);
-		panel2.add(textFieldRutaVideosPromocionales);
-
-		buttonRutaVideosPromocionales = new JButton("...");
-		buttonRutaVideosPromocionales.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				textFieldRutaVideosPromocionales.setText(seleccionarDirectorio());
-			}
-		});
-		buttonRutaVideosPromocionales.setBounds(551, 275, 45, 23);
-//		buttonRutaVideosPromocionales.setEnabled(false);
-		panel2.add(buttonRutaVideosPromocionales);
 
 		JPanel panel3 = new JPanel();
 		panel3.setBackground(Color.WHITE);
@@ -1101,7 +1073,6 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		textFieldVideos.setText((String)mSettingsManager.getSetting(KEY_PATH_SONGS));
 		textFieldVlc.setText((String)mSettingsManager.getSetting(KEY_PATH_VLC));
 		textFieldVideosParaMp3.setText((String)mSettingsManager.getSetting(KEY_PATH_VIDEOS_MP3));
-		textFieldRutaVideosPromocionales.setText((String)mSettingsManager.getSetting(KEY_PATH_PROMOTIONAL_VIDEOS));
 		textFieldSubirL.setText(Utils.printKeyCharCode((int)mSettingsManager.getSetting(KEY_UP_LIST)));
 		textFieldSubirL.setKeyCode((int)mSettingsManager.getSetting(KEY_UP_LIST));
 		textFieldBajarL.setText(Utils.printKeyCharCode((int)mSettingsManager.getSetting(KEY_DOWN_LIST)));
@@ -1349,15 +1320,12 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_PATH_SONGS,textFieldVideos.getText()));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_PATH_VIDEOS_MP3,textFieldVideosParaMp3.getText()));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_PATH_VLC,textFieldVlc.getText()));
-		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_PATH_PROMOTIONAL_VIDEOS,textFieldRutaVideosPromocionales.getText()));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_RANDOM_SONG,Integer.parseInt(textFieldMusicaAleatoria.getText())));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_RESET_SONGS,Integer.parseInt(textFieldReinicioMusicas.getText())));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_AMOUNT_OF_CREDITS,Integer.parseInt(textFieldCantCreditos.getText())));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_FREE,libre));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_LOCK_SCREEN,lockScreen.isSelected()));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_SAVE_SONGS,saveSongs.isSelected()));
-		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_PROMOTIONAL_VIDEO,videoPromocional));
-		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_DEFAULT_PROMOTIONAL_VIDEO,defaultVideoPromotional));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_CLICK_OF_CREDITS,clickCreditos));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_UP_LIST,textFieldSubirL.getKeyCode()));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_DOWN_LIST,textFieldBajarL.getKeyCode()));
