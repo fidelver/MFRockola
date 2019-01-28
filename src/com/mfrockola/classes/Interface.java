@@ -348,7 +348,9 @@ class Interface extends JFrame {
             if (randomSong == 0) {
                 playRandomSong();
             } else {
-                timerRandomSong.start();
+                if (randomSong != 0) {
+                    timerRandomSong.start();
+                }
             }
         }
 
@@ -1028,7 +1030,11 @@ class Interface extends JFrame {
             playListInterface.setListData(mPlayList.getPlayList());
 
             if (mPlayList.songToPlay() == null) {
-                timerRandomSong.start();
+                if (randomSong == 0) {
+                    playRandomSong();
+                } else {
+                    timerRandomSong.start();
+                }
                 labelSongPlayingBottom.setText("MFRockola");
                 labelSongPlayingRight.setText("Su selección musical");
             } else {
@@ -1099,7 +1105,7 @@ class Interface extends JFrame {
                 int extension = Utils.getExtension(song);
 
                 if (extension == EXT_MP4 || extension == EXT_AVI || extension == EXT_MPG || extension == EXT_FLV || extension == EXT_MKV) {
-                    mMediaPlayer.playVideo(mPlayList.getSongGender(),mPlayList.getSinger(),mPlayList.songToPlay());
+                    mMediaPlayer.playVideo("Promocionales", "Promocionales",mPlayList.songToPlay());
                 } else if (extension == EXT_MP3 || extension == EXT_WMA || extension == EXT_WAV || extension == EXT_AAC) {
                     String promVideo = listMusicData.getPromVideo();
                     System.out.println(promVideo);
