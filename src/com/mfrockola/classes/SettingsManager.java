@@ -52,8 +52,9 @@ public class SettingsManager {
     static final String KEY_CLICK_OF_CREDITS = "clickOfCredits";
     static final String KEY_RIGHT_CLICK_CANCEL_MUSIC = "rightClickCancelMusic";
     static final String KEY_PASSWORD = "password";
-    static final String KEY_UP_VOLUME = "upVolume";
-    static final String KEY_DOWN_VOLUME = "downVolume";
+    static final String KEY_UP_VOLUME = "keyUpVolume";
+    static final String KEY_DOWN_VOLUME = "keyDownVolume";
+    static final String KEY_INITIAL_VOLUME = "initialVolume";
 
     // Panel APPEARANCE
     static final String KEY_DEFAULT_BACKGROUND = "defaultBackground";
@@ -228,6 +229,7 @@ public class SettingsManager {
         newSettings.add(new KeyPairValue(KEY_PASSWORD,""));
         newSettings.add(new KeyPairValue(KEY_UP_VOLUME, 79));
         newSettings.add(new KeyPairValue(KEY_DOWN_VOLUME, 80));
+        newSettings.add(new KeyPairValue(KEY_INITIAL_VOLUME, 50));
 
         // Panel APPEARANCE
         newSettings.add(new KeyPairValue(KEY_DEFAULT_BACKGROUND,true));

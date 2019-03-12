@@ -67,6 +67,7 @@ class Interface extends JFrame {
     private String password;
     private int keyUpVolume;
     private int keyDownVolume;
+    private int initialVolume;
 
     private boolean defaultInterface;
     private boolean defaultBackground;
@@ -224,6 +225,7 @@ class Interface extends JFrame {
             password = (String) mUserSettings.getSetting(KEY_PASSWORD);
             keyUpVolume = (int) mUserSettings.getSetting(KEY_UP_VOLUME);
             keyDownVolume = (int) mUserSettings.getSetting(KEY_DOWN_VOLUME);
+            initialVolume = (int) mUserSettings.getSetting(KEY_INITIAL_VOLUME);
 
             defaultInterface = false;
             defaultBackground = (boolean) mUserSettings.getSetting(KEY_DEFAULT_BACKGROUND);
@@ -396,6 +398,7 @@ class Interface extends JFrame {
 
         mMediaPlayer.embeddedMediaPlayer.addMediaPlayerEventListener(sMediaPlayerManager);
         mMediaPlayer.embeddedMediaPlayerMp3.addMediaPlayerEventListener(sMediaPlayerManager);
+        mMediaPlayer.setVolume(initialVolume);
 
         if(promotionalVideo) {
             mMediaPlayer.embeddedMediaPlayer.playMedia(pathPromotionalVideo);

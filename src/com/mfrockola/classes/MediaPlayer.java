@@ -50,9 +50,6 @@ class MediaPlayer {
             embeddedMediaPlayer = mediaPlayerFactory.newEmbeddedMediaPlayer();
             embeddedMediaPlayer.setVideoSurface(mediaPlayerFactory.newVideoSurface(canvas));
             embeddedMediaPlayerMp3 = mediaPlayerFactory.newEmbeddedMediaPlayer();
-            volume = 100;
-            embeddedMediaPlayer.setVolume(volume);
-            embeddedMediaPlayerMp3.setVolume(volume);
         } catch(UnsatisfiedLinkError error) {
             // If there is an exception is that the VLC directory is not found
             JOptionPane.showMessageDialog(null,"No se encuentran las librerias de VLC, intente reinstalar VLC y configure el directorio correctamente. Si el problema persiste y su version de Java es de 64Bits pruebe instalando VLC de 64 Bits.");
@@ -73,14 +70,17 @@ class MediaPlayer {
 
     public void upVolume () {
         if (volume >= 100) return;
-        volume += 4;
-        embeddedMediaPlayer.setVolume(volume);
-        embeddedMediaPlayerMp3.setVolume(volume);
+        volume += 1;
+        setVolume(volume);
     }
 
     public void downVolume () {
         if (volume <= 0) return;
-        volume -= 4;
+        volume -= 1;
+        setVolume(volume);
+    }
+
+    public void setVolume(int volume) {
         embeddedMediaPlayer.setVolume(volume);
         embeddedMediaPlayerMp3.setVolume(volume);
     }
