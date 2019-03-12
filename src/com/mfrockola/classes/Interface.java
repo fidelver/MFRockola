@@ -65,6 +65,8 @@ class Interface extends JFrame {
     private int clickOfCredits;
     private boolean rightClickCancelMusic;
     private String password;
+    private int keyUpVolume;
+    private int keyDownVolume;
 
     private boolean defaultInterface;
     private boolean defaultBackground;
@@ -220,6 +222,8 @@ class Interface extends JFrame {
             clickOfCredits = (int) mUserSettings.getSetting(KEY_CLICK_OF_CREDITS);
             rightClickCancelMusic = (boolean) mUserSettings.getSetting(KEY_RIGHT_CLICK_CANCEL_MUSIC);
             password = (String) mUserSettings.getSetting(KEY_PASSWORD);
+            keyUpVolume = (int) mUserSettings.getSetting(KEY_UP_VOLUME);
+            keyDownVolume = (int) mUserSettings.getSetting(KEY_DOWN_VOLUME);
 
             defaultInterface = false;
             defaultBackground = (boolean) mUserSettings.getSetting(KEY_DEFAULT_BACKGROUND);
@@ -849,6 +853,15 @@ class Interface extends JFrame {
             if (evento.getKeyCode()==KeyEvent.VK_NUM_LOCK) {
                 Toolkit.getDefaultToolkit().setLockingKeyState(KeyEvent.VK_NUM_LOCK,true);
             }
+
+            if (evento.getKeyCode()==keyUpVolume) {
+                mMediaPlayer.upVolume();
+            }
+
+            if (evento.getKeyCode()==keyDownVolume) {
+                mMediaPlayer.downVolume();
+            }
+
             if (evento.getKeyCode()==keyFullScreen && (credits > 0 || !lockScreen))
             {
                 if (labelPromotions.isVisible()) {
