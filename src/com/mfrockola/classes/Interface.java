@@ -225,7 +225,14 @@ class Interface extends JFrame {
             password = (String) mUserSettings.getSetting(KEY_PASSWORD);
             keyUpVolume = (int) mUserSettings.getSetting(KEY_UP_VOLUME);
             keyDownVolume = (int) mUserSettings.getSetting(KEY_DOWN_VOLUME);
-            initialVolume = (int) mUserSettings.getSetting(KEY_INITIAL_VOLUME);
+
+            try {
+                int initial = Integer.parseInt((String) mUserSettings.getSetting(KEY_INITIAL_VOLUME));
+                if (initial < 0 || initial > 100) initial = 50;
+                initialVolume = initial;
+            } catch (NumberFormatException e) {
+                initialVolume = 50;
+            }
 
             defaultInterface = false;
             defaultBackground = (boolean) mUserSettings.getSetting(KEY_DEFAULT_BACKGROUND);

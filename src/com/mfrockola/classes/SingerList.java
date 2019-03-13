@@ -112,6 +112,7 @@ public class SingerList extends JPanel {
 
     public void updateCovers (int moveTo) {
         removeAll();
+        covers = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
             covers.add(new JLabel(printDefaultCover()));
         }
@@ -128,11 +129,13 @@ public class SingerList extends JPanel {
                 break;
             }
             case (MOVE_TO_RIGHT): {
-                int limit = singers.size() - selectedSinger;
-                for (int i = 0; i < limit; i++) {
-                    JLabel label = new JLabel(printCoverIcon(singers.get(selectedSinger+i).getPathCover()), JLabel.CENTER);
-                    covers.set(i, label);
-                    add(covers.get(i));
+                int size = singers.size();
+                for (int i = 0; i < 4; i++) {
+                    if (selectedSinger + i < size) {
+                        JLabel label = new JLabel(printCoverIcon(singers.get(selectedSinger+i).getPathCover()), JLabel.CENTER);
+                        covers.set(i, label);
+                        add(covers.get(i));
+                    }
                 }
                 repaint();
                 break;

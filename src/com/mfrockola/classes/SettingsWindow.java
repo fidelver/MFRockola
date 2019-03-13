@@ -37,6 +37,9 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 
 	private TextFieldKey textFieldPantallaCompleta;
 	private TextFieldKey textFieldBorrar;
+	private TextFieldKey textFieldSubirVolumen;
+	private TextFieldKey textFieldBajarVolumen;
+	private JTextField textFieldVolumenInicial;
 	private TextFieldKey textFieldSaltarCancion;
 	private TextFieldKey textFieldAgregarCreditos;
 	private TextFieldKey textFieldBorrarCredito;
@@ -650,6 +653,37 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		textFieldBorrar.setBounds(120, 272, 50, 20);
 		panel5.add(textFieldBorrar);
 
+		JLabel lblSubirVolumen = new JLabel("Subir volumen");
+		lblSubirVolumen.setHorizontalAlignment(SwingConstants.RIGHT);
+		lblSubirVolumen.setBounds(10, 301, 103, 14);
+		panel5.add(lblSubirVolumen);
+
+		textFieldSubirVolumen = new TextFieldKey(this,(int)mSettingsManager.getSetting(KEY_UP_VOLUME));
+		textFieldSubirVolumen.setColumns(10);
+		textFieldSubirVolumen.setBounds(120, 297, 50, 20);
+		panel5.add(textFieldSubirVolumen);
+
+		JLabel lblBajarVolumen = new JLabel("Bajar volumen");
+		lblBajarVolumen.setHorizontalAlignment(SwingConstants.RIGHT);
+		lblBajarVolumen.setBounds(10, 326, 103, 14);
+		panel5.add(lblBajarVolumen);
+
+		textFieldBajarVolumen = new TextFieldKey(this,(int)mSettingsManager.getSetting(KEY_DOWN_VOLUME));
+		textFieldBajarVolumen.setColumns(10);
+		textFieldBajarVolumen.setBounds(120, 322, 50, 20);
+		panel5.add(textFieldBajarVolumen);
+
+		JLabel lblVolumenInicial = new JLabel("Volumen inicial");
+		lblVolumenInicial.setHorizontalAlignment(SwingConstants.RIGHT);
+		lblVolumenInicial.setBounds(10, 351, 103, 14);
+		panel5.add(lblVolumenInicial);
+
+		textFieldVolumenInicial = new JTextField();
+		textFieldVolumenInicial.setColumns(3);
+		textFieldVolumenInicial.setHorizontalAlignment(SwingConstants.CENTER);
+		textFieldVolumenInicial.setBounds(120, 347, 50, 20);
+		panel5.add(textFieldVolumenInicial);
+
 		JLabel labelSaltarCancion = new JLabel("Tecla para saltar canción");
 		labelSaltarCancion.setBounds(167,247,200,23);
 		labelSaltarCancion.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -1260,6 +1294,11 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		textFieldPantallaCompleta.setKeyCode((int)mSettingsManager.getSetting(KEY_FULL_SCREEN));
 		textFieldBorrar.setText(Utils.printKeyCharCode((int)mSettingsManager.getSetting(KEY_DELETE_NUMBER)));
 		textFieldBorrar.setKeyCode((int)mSettingsManager.getSetting(KEY_DELETE_NUMBER));
+		textFieldSubirVolumen.setText(Utils.printKeyCharCode((int)mSettingsManager.getSetting(KEY_UP_VOLUME)));
+		textFieldSubirVolumen.setKeyCode((int)mSettingsManager.getSetting(KEY_UP_VOLUME));
+		textFieldBajarVolumen.setText(Utils.printKeyCharCode((int)mSettingsManager.getSetting(KEY_DOWN_VOLUME)));
+		textFieldBajarVolumen.setKeyCode((int)mSettingsManager.getSetting(KEY_DOWN_VOLUME));
+		textFieldVolumenInicial.setText((String) mSettingsManager.getSetting(KEY_INITIAL_VOLUME));
 		textFieldSaltarCancion.setText(Utils.printKeyCharCode((int)mSettingsManager.getSetting(KEY_NEXT_SONG)));
 		textFieldSaltarCancion.setKeyCode((int)mSettingsManager.getSetting(KEY_NEXT_SONG));
 		textFieldAgregarCreditos.setText(Utils.printKeyCharCode((int)mSettingsManager.getSetting(KEY_ADD_CREDIT)));
@@ -1533,6 +1572,9 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_FULL_SCREEN,textFieldPantallaCompleta.getKeyCode()));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_DELETE_NUMBER,textFieldBorrar.getKeyCode()));
+		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_UP_VOLUME,textFieldSubirVolumen.getKeyCode()));
+		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_DOWN_VOLUME,textFieldBajarVolumen.getKeyCode()));
+		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_INITIAL_VOLUME,textFieldVolumenInicial.getText()));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_NEXT_SONG,textFieldSaltarCancion.getKeyCode()));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_ADD_CREDIT,textFieldAgregarCreditos.getKeyCode()));
 		mSettingsManager.writeSetting(false,new KeyPairValue(KEY_DELETE_CREDIT,textFieldBorrarCredito.getKeyCode()));
