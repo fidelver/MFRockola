@@ -229,7 +229,7 @@ public class SettingsManager {
         newSettings.add(new KeyPairValue(KEY_PASSWORD,""));
         newSettings.add(new KeyPairValue(KEY_UP_VOLUME, 79));
         newSettings.add(new KeyPairValue(KEY_DOWN_VOLUME, 80));
-        newSettings.add(new KeyPairValue(KEY_INITIAL_VOLUME, 50));
+        newSettings.add(new KeyPairValue(KEY_INITIAL_VOLUME, "50"));
 
         // Panel APPEARANCE
         newSettings.add(new KeyPairValue(KEY_DEFAULT_BACKGROUND,true));
