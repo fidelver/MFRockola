@@ -406,6 +406,7 @@ class Interface extends JFrame {
         mMediaPlayer.embeddedMediaPlayer.addMediaPlayerEventListener(sMediaPlayerManager);
         mMediaPlayer.embeddedMediaPlayerMp3.addMediaPlayerEventListener(sMediaPlayerManager);
         mMediaPlayer.setVolume(initialVolume);
+        mMediaPlayer.initVolume(initialVolume);
 
         if(promotionalVideo) {
             mMediaPlayer.embeddedMediaPlayer.playMedia(pathPromotionalVideo);
@@ -452,14 +453,14 @@ class Interface extends JFrame {
 
                 // Cuando se presiona click izquierdo y las canciones no se pueden cancelar
 
-                if(clickOfCredits==0 && !e.isMetaDown() && !free)
-                {
+                if(clickOfCredits==0 && !e.isMetaDown() && !free) {
                     credits = credits + amountOfCredits;
                     labelCredits.setText(String.format("Creditos: %d", credits));
                     updateCreditsSettings();
                     labelCredits.setForeground(Color.WHITE);
                     if (isFullScreen) {
                         setFullScreen();
+                        if (!lockScreen) timerFullScreen.restart();
                     }
 
                     entregarPremiosYCreditosAdicionales();
@@ -470,6 +471,7 @@ class Interface extends JFrame {
 
                     if (isFullScreen) {
                         setFullScreen();
+                        if (!lockScreen) timerFullScreen.restart();
                     }
                     counterClick++;
                     if (counterClick == 3) {
@@ -516,6 +518,7 @@ class Interface extends JFrame {
                     labelCredits.setForeground(Color.WHITE);
                     if (isFullScreen) {
                         setFullScreen();
+                        if (!lockScreen) timerFullScreen.restart();
                     }
                     entregarPremiosYCreditosAdicionales();
                 }
@@ -870,6 +873,10 @@ class Interface extends JFrame {
 
             if (evento.getKeyCode()==keyDownVolume) {
                 mMediaPlayer.downVolume();
+            }
+
+            if (!lockScreen) {
+                timerFullScreen.restart();
             }
 
             if (evento.getKeyCode()==keyFullScreen && (credits > 0 || !lockScreen))
