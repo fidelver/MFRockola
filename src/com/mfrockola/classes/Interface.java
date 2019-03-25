@@ -398,7 +398,7 @@ class Interface extends JFrame {
         timerFullScreen = new Timer(10000, changeFullScreen);
         timerFullScreen.setRepeats(false);
 
-        timerAlphabet = new Timer(2000, showAlphabet);
+        timerAlphabet = new Timer(1000, showAlphabet);
         timerAlphabet.setRepeats(false);
 
         timerRandomSong = new Timer(randomSong*1000*60,play);
@@ -827,8 +827,11 @@ class Interface extends JFrame {
     {
         if (!isFullScreen)
         {
-            if (!modeGenreList)
+            if (!modeGenreList) {
+                mPlaySelector.setVisible(false);
+                mAlphabetSelector.setVisible(false);
                 mSingerList.setVisible(false);
+            }
 
             mScrollPane.setVisible(false);
             mSongListInterface.setVisible(false);
@@ -840,7 +843,6 @@ class Interface extends JFrame {
         else
         {
             videoPanel.setBounds((int)(widthScreen/1.633), (int)(heightScreen/16.340),(int)(widthScreen/2.732), (int)(heightScreen/2.7137));
-
             if (!modeGenreList)
                 mSingerList.setVisible(true);
 
