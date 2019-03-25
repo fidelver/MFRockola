@@ -84,6 +84,10 @@ class MediaPlayer {
         this.volume = volume;
     }
 
+    public int getVolume() {
+        return volume;
+    }
+
     public void setVolume(int volume) {
         embeddedMediaPlayer.setVolume(volume);
         embeddedMediaPlayerMp3.setVolume(volume);

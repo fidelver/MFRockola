@@ -119,6 +119,8 @@ class Interface extends JFrame {
     private JPanel videoPanel;
     private JPanel panel;
     private VipSelector mPanelVipSelector;
+    private AlphabetSelector mAlphabetSelector;
+    private PlaySelector mPlaySelector;
 
     // Panel containing the bottom interface information
     private JPanel bottomPanel;
@@ -172,6 +174,9 @@ class Interface extends JFrame {
 
     // this timer controls the automatic fullscreen
     private Timer timerFullScreen;
+
+    // this timer controls the automatic fullscreen
+    private Timer timerAlphabet;
 
     // This timer controls the error that sometimes occurs when the video screen is complete
     private Timer timer;
@@ -367,6 +372,12 @@ class Interface extends JFrame {
             }
         };
 
+        ActionListener showAlphabet = e -> {
+            if (!mPlaySelector.isVisible() && !mPanelVipSelector.isVisible()) {
+                mAlphabetSelector.setVisible(true);
+            }
+        };
+
         ActionListener play = e -> {
             playRandomSong();
         };
@@ -386,6 +397,9 @@ class Interface extends JFrame {
 
         timerFullScreen = new Timer(10000, changeFullScreen);
         timerFullScreen.setRepeats(false);
+
+        timerAlphabet = new Timer(2000, showAlphabet);
+        timerAlphabet.setRepeats(false);
 
         timerRandomSong = new Timer(randomSong*1000*60,play);
         timerRandomSong.setRepeats(false);
@@ -689,6 +703,14 @@ class Interface extends JFrame {
         mPanelVipSelector.setBounds((widthScreen/2)-200,(heightScreen/2)-90,400,180);
         mPanelVipSelector.setVisible(false);
 
+        mAlphabetSelector = new AlphabetSelector();
+        mAlphabetSelector.setBounds((widthScreen/2)-500,(heightScreen/2)-40,1000,80);
+        mAlphabetSelector.setVisible(false);
+
+        mPlaySelector = new PlaySelector();
+        mPlaySelector.setBounds((widthScreen/2)-200,(heightScreen/2)-50,400,100);
+        mPlaySelector.setVisible(false);
+
         // Iniciar las listas
 
         listMusicData = new ListMusic(modeGenreList,pathSongs,pathVideosMP3); //Aqui falta la direccion de los videos promocionales
@@ -735,7 +757,7 @@ class Interface extends JFrame {
         if (modeGenreList) {
             labelMusicalGenre.setText("Genero Musical: "+ listMusicData.getNameOfGender());
         } else {
-            labelMusicalGenre.setText("Artista: " + listMusicData.getNameOfSinger());
+            labelMusicalGenre.setText("Album: " + listMusicData.getNameOfSinger());
         }
 
         // Iniciar los panel
@@ -745,6 +767,8 @@ class Interface extends JFrame {
         mainPanel.setLayout(null);
         mainPanel.add(labelPromotions);
         mainPanel.add(mPanelVipSelector);
+        mainPanel.add(mAlphabetSelector);
+        mainPanel.add(mPlaySelector);
         mainPanel.add(mScrollPane);
 
         mainPanel.add(labelMusicalGenre);
@@ -860,6 +884,17 @@ class Interface extends JFrame {
     {
         SQLiteConsultor consultor = new SQLiteConsultor();
 
+        @Override
+        public void keyReleased(KeyEvent e) {
+            if (e.getKeyCode() == keyLeftCoversModeSingers && !modeGenreList && !selectVIP) {
+                timerAlphabet.stop();
+            }
+
+            if (e.getKeyCode() == keyRightCoversModeSingers && !modeGenreList && !selectVIP) {
+                timerAlphabet.stop();
+            }
+        }
+
         public void keyPressed(KeyEvent evento)
         {
             // tecla bloque numerico = 144
@@ -869,10 +904,14 @@ class Interface extends JFrame {
 
             if (evento.getKeyCode()==keyUpVolume) {
                 mMediaPlayer.upVolume();
+                labelCredits.setText("Volumen " + mMediaPlayer.getVolume());
+                timerChangerLabelCredits.restart();
             }
 
             if (evento.getKeyCode()==keyDownVolume) {
                 mMediaPlayer.downVolume();
+                labelCredits.setText("Volumen " + mMediaPlayer.getVolume());
+                timerChangerLabelCredits.restart();
             }
 
             if (!lockScreen) {
@@ -900,6 +939,23 @@ class Interface extends JFrame {
             if (evento.getKeyCode()== keyPlaySongModeSingers && !modeGenreList) {
                 if (isFullScreen) {
                     setFullScreen();
+                } else if (!mPlaySelector.isVisible() && credits > 0 && !mAlphabetSelector.isVisible()) {
+                    mPlaySelector.setInitialSelection();
+                    mPlaySelector.setVisible(true);
+                } else if (mAlphabetSelector.isVisible()) {
+                    mSingerList.findAlbum(mAlphabetSelector.getSelection());
+                    mAlphabetSelector.setVisible(false);
+                    listMusicData.setSelectedSinger(mSingerList.getSelectedSinger());
+                    labelMusicalGenre.setText("Album: " + listMusicData.getNameOfSinger());
+                    mSongListInterface.setListData(listMusicData.getSingerSongs());
+                    mSongListInterface.setSelectedIndex(0);
+                    mSongListInterface.ensureIndexIsVisible(0);
+                } else if (mPlaySelector.isVisible()) {
+                    if (mPlaySelector.getSelection() == 0) {
+                        Song song = (Song) mSongListInterface.getSelectedValue();
+                        playOneSong(song.getSongNumber());
+                    }
+                    mPlaySelector.setVisible(false);
                 } else  if (mPanelVipSelector.isVisible()) {
                     switch (mPanelVipSelector.getSelection()) {
                         case 0: {
@@ -991,8 +1047,12 @@ class Interface extends JFrame {
                     setFullScreen();
                 }
 
-                if (mPanelVipSelector.isVisible()) {
+                if (mAlphabetSelector.isVisible()) {
+                    evento.consume();
+                } else if (mPanelVipSelector.isVisible()) {
                     mPanelVipSelector.setSelection(VipSelector.KEY_UP);
+                } else if (mPlaySelector.isVisible()) {
+                    mPlaySelector.setSelection(PlaySelector.KEY_UP);
                 } else if(mSongListInterface.getSelectedIndex() > 0 && !selectVIP) {
                     mSongListInterface.setSelectedIndex(mSongListInterface.getSelectedIndex()-1);
                     mSongListInterface.ensureIndexIsVisible(mSongListInterface.getSelectedIndex());
@@ -1004,8 +1064,12 @@ class Interface extends JFrame {
                     setFullScreen();
                 }
 
-                if (mPanelVipSelector.isVisible()) {
+                if (mAlphabetSelector.isVisible()) {
+                    evento.consume();
+                } else if (mPanelVipSelector.isVisible()) {
                     mPanelVipSelector.setSelection(VipSelector.KEY_DOWN);
+                } else if (mPlaySelector.isVisible()) {
+                    mPlaySelector.setSelection(PlaySelector.KEY_DOWN);
                 } else if(mSongListInterface.getSelectedIndex()+1 >= listMusicData.getSingerSongs().length && !selectVIP) {
                     evento.consume();
                 } else {
@@ -1052,26 +1116,50 @@ class Interface extends JFrame {
                 }
             // Empieza la rutina para cambiar de album hacia la izquierda
             } else if (evento.getKeyCode() == keyLeftCoversModeSingers && (credits > 0 || !lockScreen) && !modeGenreList && !selectVIP) {
+                if (!timerAlphabet.isRunning()) {
+                    timerAlphabet.restart();
+                }
+
                 if (isFullScreen) {
                     setFullScreen();
                 }
-                mSingerList.setSelectedSinger(SingerList.MOVE_TO_LEFT);
-                listMusicData.setSelectedSinger(mSingerList.getSelectedSinger());
-                labelMusicalGenre.setText("Artista: " + listMusicData.getNameOfSinger());
-                mSongListInterface.setListData(listMusicData.getSingerSongs());
-                mSongListInterface.setSelectedIndex(0);
-                mSongListInterface.ensureIndexIsVisible(0);
+
+                if (mPlaySelector.isVisible()) {
+                    evento.consume();
+                } else if (mAlphabetSelector.isVisible()) {
+                    mAlphabetSelector.setSelection(AlphabetSelector.KEY_LEFT);
+                    evento.consume();
+                } else {
+                    mSingerList.setSelectedSinger(SingerList.MOVE_TO_LEFT);
+                    listMusicData.setSelectedSinger(mSingerList.getSelectedSinger());
+                    labelMusicalGenre.setText("Album: " + listMusicData.getNameOfSinger());
+                    mSongListInterface.setListData(listMusicData.getSingerSongs());
+                    mSongListInterface.setSelectedIndex(0);
+                    mSongListInterface.ensureIndexIsVisible(0);
+                }
             // Empieza la rutina para cambiar de album hacia la derecha
             } else if (evento.getKeyCode() == keyRightCoversModeSingers && (credits > 0 || !lockScreen) && !modeGenreList && !selectVIP) {
+                if (!timerAlphabet.isRunning()) {
+                    timerAlphabet.restart();
+                }
+
                 if (isFullScreen) {
                     setFullScreen();
                 }
-                mSingerList.setSelectedSinger(SingerList.MOVE_TO_RIGHT);
-                listMusicData.setSelectedSinger(mSingerList.getSelectedSinger());
-                labelMusicalGenre.setText("Artista: " + listMusicData.getNameOfSinger());
-                mSongListInterface.setListData(listMusicData.getSingerSongs());
-                mSongListInterface.setSelectedIndex(0);
-                mSongListInterface.ensureIndexIsVisible(0);
+
+                if (mPlaySelector.isVisible()) {
+                    evento.consume();
+                } else if (mAlphabetSelector.isVisible()) {
+                    mAlphabetSelector.setSelection(AlphabetSelector.KEY_RIGHT);
+                    evento.consume();
+                } else {
+                    mSingerList.setSelectedSinger(SingerList.MOVE_TO_RIGHT);
+                    listMusicData.setSelectedSinger(mSingerList.getSelectedSinger());
+                    labelMusicalGenre.setText("Album: " + listMusicData.getNameOfSinger());
+                    mSongListInterface.setListData(listMusicData.getSingerSongs());
+                    mSongListInterface.setSelectedIndex(0);
+                    mSongListInterface.ensureIndexIsVisible(0);
+                }
             } else if (evento.getKeyCode() == keyDownGenre && (credits > 0 || !lockScreen) && modeGenreList) {
                 if (isFullScreen) {
                     setFullScreen();

@@ -26,11 +26,17 @@ public class SingerList extends JPanel {
 
     private ArrayList<Singer> singers;
     private ArrayList<JLabel> covers;
+    private ArrayList<String> index;
 
     public SingerList (int width, int height, ArrayList<Singer> singers) {
         this.width = width;
         this.height = height;
         this.singers = singers;
+        this.index = new ArrayList<>();
+
+        for (int i = 0; i < singers.size(); i++) {
+            index.add(String.valueOf(singers.get(i).getName().charAt(0)));
+        }
 
         selectedSinger = 0;
         selectedCover = 0;
@@ -48,6 +54,31 @@ public class SingerList extends JPanel {
             add(covers.get(i));
         }
         updateBorder(MOVE_TO_FIRST);
+    }
+
+    public void findAlbum(String character) {
+        int find = index.indexOf(character);
+
+        if (find != -1) {
+            selectedSinger = find;
+
+            removeAll();
+            covers = new ArrayList<>();
+            for (int i = 0; i < 4; i++) {
+                covers.add(new JLabel(printDefaultCover()));
+            }
+
+            selectedCover = selectedSinger % 4;
+
+            for (int i = 0; i < 4; i++) {
+                JLabel label = new JLabel(printCoverIcon(singers.get((selectedSinger-selectedCover) + i).getPathCover()), JLabel.CENTER);
+                covers.set(i, label);
+                add(covers.get(i));
+            }
+
+            covers.get(selectedCover).setBorder(BorderFactory.createLineBorder(Color.RED, 4));
+            repaint();
+        }
     }
 
     public void setSelectedSinger(int moveTo) {
