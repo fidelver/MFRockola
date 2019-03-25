@@ -7,11 +7,16 @@ import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 
 import javax.crypto.Cipher;
 import javax.swing.*;
+
+import static com.mfrockola.classes.LicenseManager.*;
 
 /**
 	This class will be used to execute MFRockola. Since the configuration must be external, a splash is made so that the
@@ -47,6 +52,30 @@ public class Splash extends JFrame implements Runnable {
 		setLocationRelativeTo(null);
 		setUndecorated(true);
 		this.setVisible(true);
+
+		try {
+			LicenseManager licenseManager = new LicenseManager();
+			PublicKey publicKey = licenseManager.readPublicKey("C:\\MFRockola\\public.der");
+			PrivateKey privateKey = licenseManager.readPrivateKey("C:\\MFRockola\\private.der");
+
+//			byte[] message = "Mensaje secreto".getBytes("UTF-8");
+//			byte [] result = licenseManager.encrypt(publicKey, message);
+//			System.out.println(new String(result, "UTF-8"));
+//
+//			byte[] recovered_message = licenseManager.decrypt(privateKey, result);
+//			System.out.println(new String(recovered_message, "UTF8"));
+
+			byte[] result = encrypt(privateKey, "Mensaje secreto");
+			String encrypted = bytesToHex(result);
+
+			byte[] bytes = encrypted.getBytes("UTF-8");
+
+			System.out.println(new String(licenseManager.decrypt(publicKey, bytes)));
+
+//			licenseManager.getSerialKey();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	// Starts MFRockola
