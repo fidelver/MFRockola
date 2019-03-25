@@ -40,43 +40,13 @@ public class Splash extends JFrame implements Runnable {
 		labelText.setForeground(Color.WHITE);
 		labelText.setFont(new Font("Calibri", Font.BOLD, 16));
 		labelText.setHorizontalAlignment(SwingConstants.RIGHT);
-		panel.add(labelText,BorderLayout.SOUTH);
+		panel.add(labelText, BorderLayout.SOUTH);
 		getContentPane().add(panel);
 		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-		setSize(480,300);
+		setSize(480, 300);
 		setLocationRelativeTo(null);
 		setUndecorated(true);
 		this.setVisible(true);
-
-		getSerialKey();
-	}
-
-	public static void getSerialKey () {
-        Disks disks = new WindowsDisks();
-		String identifier = disks.getDisks()[0].getSerial();
-		System.out.println(identifier);
-
-		try {
-			X509EncodedKeySpec publicSpec = new X509EncodedKeySpec(readFileBytes(filename));
-			KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-			return keyFactory.generatePublic(publicSpec);
-			KeyPair keyPair = buildKeyPair();
-			PublicKey pubKey = keyPair.getPublic();
-			PrivateKey privateKey = keyPair.getPrivate();
-
-			System.out.println(new String(pubKey.getEncoded()));
-			System.out.println(new String(privateKey.getEncoded()));
-
-			// sign the message
-			byte [] signed = encrypt(privateKey, "This is a secret message");
-			System.out.println(new String(signed));  // <<signed message>>
-
-			// verify the message
-			byte[] verified = decrypt(pubKey, signed);
-			System.out.println(new String(verified));    // This is a secret message
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 	
 	// Starts MFRockola
@@ -92,27 +62,6 @@ public class Splash extends JFrame implements Runnable {
 
         // Execute an additional thread for the time we have to press Q and hold the mouse in the lower right corner
         new Thread(new Splash()).start();
-	}
-
-	public static KeyPair buildKeyPair() throws NoSuchAlgorithmException {
-		final int keySize = 2048;
-		KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-		keyPairGenerator.initialize(keySize);
-		return keyPairGenerator.genKeyPair();
-	}
-
-	public static byte[] encrypt(PrivateKey privateKey, String message) throws Exception {
-		Cipher cipher = Cipher.getInstance("RSA");
-		cipher.init(Cipher.ENCRYPT_MODE, privateKey);
-
-		return cipher.doFinal(message.getBytes());
-	}
-
-	public static byte[] decrypt(PublicKey publicKey, byte [] encrypted) throws Exception {
-		Cipher cipher = Cipher.getInstance("RSA");
-		cipher.init(Cipher.DECRYPT_MODE, publicKey);
-
-		return cipher.doFinal(encrypted);
 	}
 
     // thread for the time we have to press Q and hold the mouse in the lower right corner
