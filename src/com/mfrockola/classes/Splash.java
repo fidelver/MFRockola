@@ -45,6 +45,7 @@ public class Splash extends JFrame implements Runnable {
 	
 	// Starts MFRockola
     public static void main(String args [])	{
+		System.setProperty ("jna.encoding", "UTF8");//this line corrects the problem with special characters by fidelver
 		try {
             // Change the look and feel of windows to the running environment that is Windows
             JFrame.setDefaultLookAndFeelDecorated(true);
