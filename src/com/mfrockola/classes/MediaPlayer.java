@@ -38,7 +38,7 @@ class MediaPlayer {
 
             // A Canvas is created
             Canvas canvas = new Canvas();
-            canvas.setBackground(Color.WHITE);
+            canvas.setBackground(Color.BLACK);
 
             // Add to the player container our canvas
             mediaPlayerContainer = new JPanel();
