@@ -17,7 +17,7 @@ public class SQLiteConsultor {
     String userHome = System.getProperty("user.dir");
     ruta = new java.io.File(userHome, "canciones_populares.s3db").getAbsolutePath();
     }
-    
+
     public void connect() {
         try {
             Class.forName("org.sqlite.JDBC");

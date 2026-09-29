@@ -8,7 +8,6 @@ import uk.co.caprica.vlcj.runtime.RuntimeUtil;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
 
 import com.sun.jna.NativeLibrary;
 
@@ -70,7 +69,7 @@ class MediaPlayer {
 
     // Method to play audio
     void playAudio(String gender, String singer, String songName, String pathPromotionalVideo) {
-        embeddedMediaPlayerMp3.playMedia(new File(pathSongs, gender + File.separator + singer + File.separator + songName).getPath());
+        embeddedMediaPlayerMp3.playMedia(String.format("%s\\%s\\%s\\%s", pathSongs,gender,singer,songName));
         embeddedMediaPlayer.playMedia(pathPromotionalVideo);
     }
 
@@ -81,6 +80,6 @@ class MediaPlayer {
 
     // Method to play video
     void playVideo(String gender, String singer, String songName) {
-        embeddedMediaPlayer.playMedia(new File(pathSongs, gender + File.separator + singer + File.separator + songName).getPath());
+        embeddedMediaPlayer.playMedia(String.format("%s\\%s\\%s\\%s", pathSongs,gender,singer,songName));
     }
 }

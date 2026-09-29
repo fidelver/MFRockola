@@ -29,14 +29,6 @@ import static com.mfrockola.classes.Utils.*;
  */
 class Interface extends JFrame {
 
-    private String buildPath(String... parts) {
-        File file = new File(parts[0]);
-        for (int i = 1; i < parts.length; i++) {
-            file = new File(file, parts[i]);
-        }
-        return file.getPath();
-    }
-
     private int randomSong;
     private int resetSongs;
 
@@ -363,7 +355,7 @@ class Interface extends JFrame {
         }
 
         if (mPlayList.songToPlay()!=null) {
-            int extension = Utils.getExtension(buildPath(pathSongs, mPlayList.getSongGender(), mPlayList.getSinger(), mPlayList.songToPlay()));
+            int extension = Utils.getExtension(String.format("%s\\%s\\%s\\%s", pathSongs,mPlayList.getSongGender(),mPlayList.getSinger(), mPlayList.songToPlay()));
 
             if (extension == EXT_MP4 || extension == EXT_AVI || extension == EXT_MPG || extension == EXT_FLV || extension == EXT_MKV) {
                 mMediaPlayer.playVideo(mPlayList.getSongGender(),mPlayList.getSinger(),mPlayList.songToPlay());
@@ -372,7 +364,7 @@ class Interface extends JFrame {
                         mPlayList.getSongGender(),
                         mPlayList.getSinger(),
                         mPlayList.songToPlay(),
-                        buildPath(pathVideosMP3, listMusicData.getPromVideo()));
+                        pathVideosMP3 + "\\" + listMusicData.getPromVideo());
             }
 
             labelSongPlayingBottom.setText(String.format("%05d - %s - %s - %s",
@@ -772,7 +764,7 @@ class Interface extends JFrame {
 
                             mPlayList.addSong(cancionAReproducir);
 
-                            int extension = Utils.getExtension(buildPath(pathSongs, mPlayList.getSongGender(), mPlayList.getSinger(), mPlayList.songToPlay()));
+                            int extension = Utils.getExtension(String.format("%s\\%s\\%s\\%s", pathSongs,mPlayList.getSongGender(),mPlayList.getSinger(), mPlayList.songToPlay()));
 
                             if (extension == EXT_MP4 || extension == EXT_AVI || extension == EXT_MPG || extension == EXT_FLV || extension == EXT_MKV) {
                                 mMediaPlayer.playVideo(mPlayList.getSongGender(),mPlayList.getSinger(),mPlayList.songToPlay());
@@ -781,7 +773,7 @@ class Interface extends JFrame {
                                         mPlayList.getSongGender(),
                                         mPlayList.getSinger(),
                                         mPlayList.songToPlay(),
-                                        buildPath(pathVideosMP3, listMusicData.getPromVideo()));
+                                        pathVideosMP3 + "\\" + listMusicData.getPromVideo());
                             }
 
                             playListInterface.setListData(mPlayList.getPlayList());
@@ -1021,7 +1013,7 @@ class Interface extends JFrame {
 
         public void finished(uk.co.caprica.vlcj.player.MediaPlayer mediaPlayer) {
             if (mMediaPlayer.embeddedMediaPlayerMp3.isPlaying()) {
-                String path = buildPath(pathVideosMP3, listMusicData.getPromVideo());
+                String path = pathVideosMP3 + "\\" + listMusicData.getPromVideo();
                 File file = new File(path);
                 mMediaPlayer.playVideo(file.getAbsolutePath());
             } else {
@@ -1046,7 +1038,7 @@ class Interface extends JFrame {
                 labelSongPlayingBottom.setText("MFRockola");
                 labelSongPlayingRight.setText("Su selección musical");
             } else {
-                int extension = Utils.getExtension(buildPath(pathSongs, mPlayList.getSongGender(), mPlayList.getSinger(), mPlayList.songToPlay()));
+                int extension = Utils.getExtension(String.format("%s\\%s\\%s\\%s", pathSongs,mPlayList.getSongGender(),mPlayList.getSinger(), mPlayList.songToPlay()));
 
                 if (extension == EXT_MP4 || extension == EXT_AVI || extension == EXT_MPG || extension == EXT_FLV || extension == EXT_MKV) {
                     mMediaPlayer.playVideo(
@@ -1059,7 +1051,7 @@ class Interface extends JFrame {
                             mPlayList.getSongGender(),
                             mPlayList.getSinger(),
                             mPlayList.songToPlay(),
-                            buildPath(pathVideosMP3, listMusicData.getPromVideo()));
+                            pathVideosMP3 + "\\" + listMusicData.getPromVideo());
                 }
 
                 labelSongPlayingBottom.setText(String.format("%05d - %s - %s - %s",
@@ -1101,7 +1093,7 @@ class Interface extends JFrame {
     public void playRandomSong(){
         Random random = new Random();
         if (randomSong == 0) {
-            File file = new File(buildPath(pathSongs, "Promocionales", "Promocionales"));
+            File file = new File(pathSongs + "\\Promocionales\\Promocionales");
             if (file.isDirectory()) {
                 String [] list = file.list();
                 if (list.length == 0) return;
@@ -1121,7 +1113,7 @@ class Interface extends JFrame {
                             mPlayList.getSongGender(),
                             mPlayList.getSinger(),
                             mPlayList.songToPlay(),
-                            buildPath(pathVideosMP3, promVideo));
+                            pathVideosMP3 + "\\" + promVideo);
                 }
 
                 playListInterface.setListData(mPlayList.getPlayList());
@@ -1139,7 +1131,7 @@ class Interface extends JFrame {
 
         mPlayList.addSong(listMusicData.getSong(random.nextInt(listMusicData.getSizeListOfSongs())));
 
-        int extension = Utils.getExtension(buildPath(pathSongs, mPlayList.getSongGender(), mPlayList.getSinger(), mPlayList.songToPlay()));
+        int extension = Utils.getExtension(String.format("%s\\%s\\%s\\%s", pathSongs,mPlayList.getSongGender(),mPlayList.getSinger(), mPlayList.songToPlay()));
 
         if (extension == EXT_MP4 || extension == EXT_AVI || extension == EXT_MPG || extension == EXT_FLV || extension == EXT_MKV) {
             mMediaPlayer.playVideo(mPlayList.getSongGender(),mPlayList.getSinger(),mPlayList.songToPlay());
@@ -1148,7 +1140,7 @@ class Interface extends JFrame {
                     mPlayList.getSongGender(),
                     mPlayList.getSinger(),
                     mPlayList.songToPlay(),
-                    buildPath(pathVideosMP3, listMusicData.getPromVideo()));
+                    pathVideosMP3 + "\\" + listMusicData.getPromVideo());
         }
 
         playListInterface.setListData(mPlayList.getPlayList());
@@ -1182,7 +1174,7 @@ class Interface extends JFrame {
                     } else if (extension == EXT_MP3 || extension == EXT_WMA || extension == EXT_WAV || extension == EXT_AAC) {
                         mMediaPlayer.playAudio(
                                 randomSong,
-                                buildPath((String) mUserSettings.getSetting(KEY_PATH_VIDEOS_MP3), listMusicData.getPromVideo()));
+                                (String) mUserSettings.getSetting(KEY_PATH_VIDEOS_MP3) + "\\" + listMusicData.getPromVideo());
                     }
                 }
             }
