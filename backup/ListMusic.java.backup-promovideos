@@ -146,11 +146,8 @@ public class ListMusic {
     }
 
     public String getPromVideo() {
-        if (promVideos == null || promVideos.length == 0) {
-            return null;
-        }
-
-        return promVideos[random.nextInt(promVideos.length)];
+        String promVideo = promVideos[random.nextInt(promVideos.length)];
+        return promVideo;
     }
 
     public String getPathPromVideos() {
