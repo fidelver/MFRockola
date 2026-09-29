@@ -71,7 +71,16 @@ public class ListMusic {
         File directorioVideosPromocionales = new File(getPathPromVideos());
 
         if (directorioVideosPromocionales.isDirectory()) {
-            promVideos = directorioVideosPromocionales.list();
+            promVideos = directorioVideosPromocionales.list(new java.io.FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    String lowerName = name.toLowerCase();
+
+                    return lowerName.endsWith(".mp4")
+                            || lowerName.endsWith(".mpg")
+                            || lowerName.endsWith(".mpeg");
+                }
+            });
         }
     }
 

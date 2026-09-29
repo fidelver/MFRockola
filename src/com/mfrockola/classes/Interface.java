@@ -288,6 +288,7 @@ class Interface extends JFrame {
                         JOptionPane.ERROR_MESSAGE);
                 System.exit(-1);
             }
+            PromotionalVideoInstaller.install(pathVideosMP3);
         }
         catch (NullPointerException excepcion) {
             excepcion.printStackTrace();

@@ -70,4 +70,12 @@
     nbproject/build-impl.xml file. 
 
     -->
+<target name="-post-compile">
+    <copy todir="${build.classes.dir}/promocionales">
+        <fileset dir="${src.dir}/promocionales">
+            <include name="*.mp4"/>
+            <include name="*.mpg"/>
+        </fileset>
+    </copy>
+</target>
 </project>
