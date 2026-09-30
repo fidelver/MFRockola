@@ -1,6 +1,5 @@
 package com.mfrockola.classes;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -43,9 +42,22 @@ class PlayList {
         }
     }
 
-    public JSONObject getSongJSONObject(Song song) {
-        JSONObject songJsonObject = new JSONObject();
+    // NUEVO: tamaño de la cola
+    int size() {
+        return mPlayList.size();
+    }
 
+    // NUEVO: elimina la primera canción solo si su nombre coincide (seguridad)
+    boolean removeSongIfMatches(String songName) {
+        if (mPlayList.size()>0 && mPlayList.get(0).getSongName().equals(songName)) {
+            mPlayList.remove(0);
+            return true;
+        }
+        return false;
+    }
+
+    JSONObject getSongJSONObject(Song song) {
+        JSONObject songJsonObject = new JSONObject();
         try {
             songJsonObject.put("songNumber",song.getSongNumber());
             songJsonObject.put("songGenre",song.getSongGenre());

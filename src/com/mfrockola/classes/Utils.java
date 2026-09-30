@@ -25,56 +25,27 @@ class Utils {
     static int EXT_FLV = 7;
     static int EXT_MKV = 8;
 
-    static int getExtension(String path) {
+        static int getExtension(String path) {
+        if (path == null) return EXT_UNKNOWN;
+
         int index = path.lastIndexOf(".");
+        if (index < 0 || index == path.length() - 1) return EXT_UNKNOWN;
 
-        String extension = path.substring(index+1);
+        String extension = path.substring(index + 1).toLowerCase();
 
-        if (extension.equals("jpg") || extension.equals("JPG")) {
-            return EXT_UNKNOWN;
+        switch (extension) {
+            case "mp4":  return EXT_MP4;
+            case "mp3":  return EXT_MP3;
+            case "avi":  return EXT_AVI;
+            case "mpg":
+            case "mpeg": return EXT_MPG;
+            case "wma":  return EXT_WMA;
+            case "wav":  return EXT_WAV;
+            case "aac":  return EXT_AAC;
+            case "flv":  return EXT_FLV;
+            case "mkv":  return EXT_MKV;
+            default:     return EXT_UNKNOWN;
         }
-
-        if (extension.equals("db") || extension.equals("DB")) {
-            return EXT_UNKNOWN;
-        }
-
-        if (extension.equals("mp4") || extension.equals("MP4")) {
-            return EXT_MP4;
-        }
-
-        if (extension.equals("mp3") || extension.equals("MP3")) {
-            return EXT_MP3;
-        }
-
-        if (extension.equals("avi") || extension.equals("AVI")) {
-            return EXT_AVI;
-        }
-
-        if (extension.equals("mpg") || extension.equals("MPG")) {
-            return EXT_MPG;
-        }
-
-        if (extension.equals("wma") || extension.equals("WMA")) {
-            return EXT_WMA;
-        }
-
-        if (extension.equals("wav") || extension.equals("WAV")) {
-            return EXT_WAV;
-        }
-
-        if (extension.equals("aac") || extension.equals("AAC")) {
-            return EXT_AAC;
-        }
-
-        if (extension.equals("flv") || extension.equals("FLV")) {
-            return EXT_FLV;
-        }
-
-        if (extension.equals("mkv") || extension.equals("MKV")) {
-            return EXT_MKV;
-        }
-
-        return EXT_MP4;
     }
 
     static String printKeyCharCode(int extendedKeyCode) {
