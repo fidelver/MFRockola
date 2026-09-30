@@ -145,7 +145,7 @@ class Interface extends JFrame {
 
     private Timer timerChangerLabelCredits;
     private Timer timerFullScreen;
-//    private Timer timer;
+    private Timer timer;
     private Timer timerRandomSong;
 
     private KeyboardManager mKeyboardManager;
@@ -282,7 +282,7 @@ class Interface extends JFrame {
         ActionListener changeFullScreen = e -> {
             if (!isFullScreen) {
                 setFullScreen();
-//                timer.restart();
+                timer.restart();
             }
         };
 
@@ -291,7 +291,7 @@ class Interface extends JFrame {
             encolarCortesiaPorTimer();
         };
 
-     /*   ActionListener pressKey = e -> {
+        ActionListener pressKey = e -> {
             try {
                 Robot robot = new Robot();
                 robot.keyPress(120);
@@ -300,9 +300,9 @@ class Interface extends JFrame {
                 exception.printStackTrace();
             }
         };
-*/
-  //     timer = new Timer(500, pressKey);
-  //     timer.setRepeats(false);
+
+        timer = new Timer(500, pressKey);
+        timer.setRepeats(false);
 
         timerFullScreen = new Timer(10000, changeFullScreen);
         timerFullScreen.setRepeats(false);
@@ -1154,38 +1154,40 @@ class Interface extends JFrame {
             }
         }
 
-            private void updateDataBase(Song cancionAReproducir) {
-                try {
-                    String consulta = "SELECT * FROM most_popular WHERE number = " + cancionAReproducir.getSongNumber();
-                    ResultSet resultSet = consultor.query(consulta);
+        private void updateDataBase(Song cancionAReproducir) {
+            try {
+                String consulta = "SELECT * FROM most_popular WHERE number = " + cancionAReproducir.getSongNumber();
 
-                    if (resultSet == null) {
-                        return;
+                ResultSet resultSet = consultor.query(consulta);
+
+                if (resultSet.isClosed()) {
+                    resultSet.close();
+
+                    String insertar = "INSERT INTO most_popular(number, name, artist, genre, times, last_date)" +
+                            " VALUES ("+cancionAReproducir.getSongNumber()+",'" +
+                            cancionAReproducir.getSongName()+ "','" +
+                            cancionAReproducir.getSinger() + "','" +
+                            cancionAReproducir.getSongGenre() + "'," +
+                            1 + ", "+ new Date().getTime() +");";
+
+                    consultor.insert(insertar);
+                } else {
+
+                    int times = 0;
+                    while (resultSet.next()) {
+                        times = resultSet.getInt("times") + 1;
                     }
 
-                    if (!resultSet.next()) {
-                        // No existe → INSERT
-                        resultSet.close();
-                        String insertar = "INSERT INTO most_popular(number, name, artist, genre, times, last_date)" +
-                                " VALUES (" + cancionAReproducir.getSongNumber() + ",'" +
-                                cancionAReproducir.getSongName() + "','" +
-                                cancionAReproducir.getSinger() + "','" +
-                                cancionAReproducir.getSongGenre() + "'," +
-                                1 + ", " + new Date().getTime() + ");";
-                        consultor.insert(insertar);
-                    } else {
-                        // Existe → UPDATE
-                        int times = resultSet.getInt("times") + 1;
-                        resultSet.close();
-                        consultor.update("UPDATE most_popular SET times = " + times +
-                                ", last_date = " + new Date().getTime() +
-                                " WHERE number = " + cancionAReproducir.getSongNumber());
-                    }
-        consultor.closeConnection();
-    } catch (SQLException ex) {
-        ex.printStackTrace();
-    }
-}
+                    resultSet.close();
+
+                    consultor.update("UPDATE most_popular SET times = " + times + ", last_date = " + new Date().getTime() + " WHERE number = " + cancionAReproducir.getSongNumber());
+
+                    consultor.closeConnection();
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
     }
 
     // ==================================================================
