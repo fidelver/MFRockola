@@ -1181,7 +1181,7 @@ class Interface extends JFrame {
                                 ", last_date = " + new Date().getTime() +
                                 " WHERE number = " + cancionAReproducir.getSongNumber());
                     }
-    //    consultor.closeConnection();
+        consultor.closeConnection();
     } catch (SQLException ex) {
         ex.printStackTrace();
     }

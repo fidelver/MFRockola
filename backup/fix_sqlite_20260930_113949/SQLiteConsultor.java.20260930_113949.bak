@@ -9,8 +9,6 @@ public class SQLiteConsultor {
     Connection connection;
     Statement statement;
     ResultSet resultSet;
-    
-    private static boolean tablaVerificada = false;
 
     public SQLiteConsultor() {
         String userHome = System.getProperty("user.dir");
@@ -50,10 +48,7 @@ public class SQLiteConsultor {
                 ");";
         try {
             statement.executeUpdate(sql);
-            if (!tablaVerificada) {
-                System.out.println("=== SQLite: tabla most_popular verificada/creada ===");
-                tablaVerificada = true;
-            }
+            System.out.println("=== SQLite: tabla most_popular verificada/creada ===");
         } catch (SQLException e) {
             System.err.println("Error creando tabla most_popular: " + e.getMessage());
             e.printStackTrace();

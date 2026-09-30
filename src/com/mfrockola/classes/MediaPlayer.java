@@ -42,6 +42,8 @@ MediaPlayerFactory mediaPlayerFactory = new MediaPlayerFactory(
         "--avcodec-hw=none",
         "--quiet",
         "--no-video-title-show",
+        "--no-stats",
+        "--no-snapshot-preview",
         "--verbose=-1");
             embeddedMediaPlayer = mediaPlayerFactory.newEmbeddedMediaPlayer();
             embeddedMediaPlayer.setVideoSurface(mediaPlayerFactory.newVideoSurface(canvas));
