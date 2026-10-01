@@ -80,18 +80,16 @@ MediaPlayerFactory mediaPlayerFactory = new MediaPlayerFactory(
         stopMp3();
     }
 
-    // NUEVO: video de fondo de un MP3, en bucle, SIN audio
+    // Reproduce el video de fondo del MP3 (una sola vez, sin audio).
+    // La rotación entre videos se gestiona desde Interface.java.
     void playBackgroundVideo(String path) {
         if (path == null || path.isEmpty()) return;
 
         File promotionalVideo = new File(path);
         if (!promotionalVideo.isFile()) return;
 
-        // input-repeat=65535 → repetir indefinidamente
-        // no-audio → silenciar aunque el archivo tenga pista de audio
         embeddedMediaPlayer.playMedia(
                 promotionalVideo.getAbsolutePath(),
-                ":input-repeat=65535",
                 ":no-audio");
     }
 

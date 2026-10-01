@@ -162,6 +162,14 @@ public class ListMusic {
         return promVideos[random.nextInt(promVideos.length)];
     }
 
+    // NUEVO: devuelve copia de todos los videos promocionales disponibles
+    public String[] getAllPromVideos() {
+        if (promVideos == null) {
+            return new String[0];
+        }
+        return promVideos.clone();
+    }
+
     public String getPathPromVideos() {
         return pathPromVideos;
     }

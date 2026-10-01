@@ -38,6 +38,10 @@ class Interface extends JFrame {
     private volatile boolean itemActualEsMp3 = false;
     private volatile long ultimaTransicionMs = 0;
 
+    // NUEVO: rotación de videos promocionales durante el MP3
+    private java.util.List<String> videosPromocionalesPendientes = new java.util.ArrayList<>();
+    private String videoPromocionalActual = null;
+
     // ------------------------------------------------------------------
 
     private String buildPath(String... parts) {
@@ -595,6 +599,10 @@ class Interface extends JFrame {
         estadoActual = EstadoSistema.REPOSO;
         itemActualEsMp3 = false;
 
+        // Limpiar estado de videos promocionales
+        videosPromocionalesPendientes.clear();
+        videoPromocionalActual = null;
+
         File promotionalFile = new File(buildPath(pathVideosMP3, "promocional.mpg"));
 
         if (promotionalFile.isFile()) {
@@ -615,6 +623,38 @@ class Interface extends JFrame {
         labelSongPlayingBottom.setText("MFRockola");
         labelSongPlayingRight.setText("Su selección musical");
     }
+    
+    /**
+     * Devuelve el siguiente video promocional a reproducir como fondo de un MP3.
+     * Rota la lista sin repetir hasta agotarla. Cuando se agota, vuelve a hacer shuffle.
+     */
+    private String siguienteVideoPromocional() {
+        if (videosPromocionalesPendientes.isEmpty()) {
+            String[] todos = listMusicData.getAllPromVideos();
+            if (todos == null || todos.length == 0) {
+                return null;
+            }
+            java.util.List<String> copia = new java.util.ArrayList<>();
+            for (String v : todos) {
+                copia.add(v);
+            }
+            java.util.Collections.shuffle(copia);
+
+            // Evitar que el primero del nuevo shuffle sea el mismo que acabó de mostrarse
+            if (videoPromocionalActual != null && copia.size() > 1
+                    && copia.get(0).equals(videoPromocionalActual)) {
+                // intercambiar con otro al azar
+                int j = 1 + new java.util.Random().nextInt(copia.size() - 1);
+                java.util.Collections.swap(copia, 0, j);
+            }
+
+            videosPromocionalesPendientes.addAll(copia);
+        }
+
+        String siguiente = videosPromocionalesPendientes.remove(0);
+        videoPromocionalActual = siguiente;
+        return siguiente;
+    }    
 
     private void procesarSiguienteEnCola() {
         if (mPlayList.songToPlay() == null) {
@@ -647,7 +687,12 @@ class Interface extends JFrame {
                     mPlayList.songToPlay());
         } else if (esAudio(extension)) {
             itemActualEsMp3 = true;
-            String promVideo = listMusicData.getPromVideo();
+
+            // Resetear la lista de videos promocionales al empezar un MP3 nuevo
+            videosPromocionalesPendientes.clear();
+            videoPromocionalActual = null;
+
+            String promVideo = siguienteVideoPromocional();
             mMediaPlayer.playAudio(
                     mPlayList.getSongGender(),
                     mPlayList.getSinger(),
@@ -743,33 +788,16 @@ class Interface extends JFrame {
         @Override
         public void stopped(uk.co.caprica.vlcj.player.MediaPlayer mediaPlayer) {
             if (deteniendoInternamente) return;
+            if (estadoActual != EstadoSistema.COLA || mPlayList.songToPlay() == null) return;
 
             boolean esMp3 = (mediaPlayer == mMediaPlayer.embeddedMediaPlayerMp3);
             boolean esVideo = (mediaPlayer == mMediaPlayer.embeddedMediaPlayer);
 
-            log("=== VLCJ STOPPED ===");
-            log("player=" + (esMp3 ? "MP3" : (esVideo ? "VIDEO" : "OTRO")));
-            log("estado=" + estadoActual);
-            log("itemActualEsMp3=" + itemActualEsMp3);
-            log("playlistSong=" + mPlayList.songToPlay());
-            log("====================");
+            // Solo el reproductor que corresponde al item actual decide
+            if (itemActualEsMp3 && !esMp3) return;    // MP3 sonando + video detenido → ignorar
+            if (!itemActualEsMp3 && !esVideo) return; // VIDEO sonando + mp3 detenido → ignorar
 
-            if (estadoActual != EstadoSistema.COLA || mPlayList.songToPlay() == null) {
-                return;
-            }
-
-            // Si el item actual es MP3 y se detuvo el VIDEO → es el fondo. Ignorar.
-            if (itemActualEsMp3 && esVideo) {
-                log("=== VIDEO DE FONDO DETENIDO: IGNORADO ===");
-                return;
-            }
-
-            // Si el item actual es VIDEO y se detuvo el MP3 → residual. Ignorar.
-            if (!itemActualEsMp3 && esMp3) {
-                log("=== MP3 RESIDUAL DETENIDO: IGNORADO ===");
-                return;
-            }
-
+            log("=== VLCJ STOPPED (" + (esMp3 ? "MP3" : "VIDEO") + ") → nextSong ===");
             nextSong();
         }
 
@@ -780,32 +808,40 @@ class Interface extends JFrame {
 
         @Override
         public void finished(uk.co.caprica.vlcj.player.MediaPlayer mediaPlayer) {
-            boolean esMp3 = (mediaPlayer == mMediaPlayer.embeddedMediaPlayerMp3);
-
-            log("=== VLCJ FINISHED ===");
-            log("player=" + (esMp3 ? "MP3" : "VIDEO"));
-            log("estado=" + estadoActual);
-            log("itemActualEsMp3=" + itemActualEsMp3);
-            log("playlistSong=" + mPlayList.songToPlay());
-            log("====================");
-
             if (estadoActual != EstadoSistema.COLA || mPlayList.songToPlay() == null) {
                 return;
             }
 
-            // Si el item actual es MP3 y terminó el VIDEO → es el fondo. Ignorar.
-            if (itemActualEsMp3 && !esMp3) {
-                log("=== FINISHED DEL VIDEO DE FONDO: IGNORADO ===");
+            boolean esMp3 = (mediaPlayer == mMediaPlayer.embeddedMediaPlayerMp3);
+            boolean esVideo = (mediaPlayer == mMediaPlayer.embeddedMediaPlayer);
+
+            // CASO 1: MP3 sonando + video de fondo terminó → ROTAR al siguiente video
+            if (itemActualEsMp3 && esVideo) {
+                String siguiente = siguienteVideoPromocional();
+                if (siguiente != null) {
+                    log("=== ROTANDO VIDEO PROMOCIONAL DE FONDO: " + siguiente + " ===");
+                    mMediaPlayer.playBackgroundVideo(buildPath(pathVideosMP3, siguiente));
+                } else {
+                    log("=== NO HAY MAS VIDEOS PROMOCIONALES PARA ROTAR ===");
+                }
                 return;
             }
 
-            // Si el item actual es VIDEO y terminó el MP3 → residual. Ignorar.
-            if (!itemActualEsMp3 && esMp3) {
-                log("=== FINISHED DEL MP3 RESIDUAL: IGNORADO ===");
+            // CASO 2: MP3 sonando + MP3 terminó → avanzar al siguiente item
+            if (itemActualEsMp3 && esMp3) {
+                log("=== VLCJ FINISHED (MP3) ===");
+                nextSong();
                 return;
             }
 
-            nextSong();
+            // CASO 3: VIDEO sonando + video terminó → avanzar al siguiente item
+            if (!itemActualEsMp3 && esVideo) {
+                log("=== VLCJ FINISHED (VIDEO) ===");
+                nextSong();
+                return;
+            }
+
+            // Otros casos: ignorar (MP3 residual mientras video sonando, etc.)
         }
     }
 
@@ -816,6 +852,10 @@ class Interface extends JFrame {
             return;
         }
         ultimaTransicionMs = ahora;
+
+        // Limpiar estado de videos promocionales
+        videosPromocionalesPendientes.clear();
+        videoPromocionalActual = null;
 
         if (mPlayList.songToPlay() != null) {
             mPlayList.removeSong();
