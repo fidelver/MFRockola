@@ -50,6 +50,7 @@ class MediaPlayer {
 
             mediaPlayerFactory = new MediaPlayerFactory(
                     "--avcodec-hw=vaapi",
+                    "--vout=xcb_x11",
                     "--quiet",
                     "--no-video-title-show",
                     "--no-stats",
