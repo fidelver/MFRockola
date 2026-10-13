@@ -690,14 +690,15 @@ class Interface extends JFrame {
             videoPromocionalActual = null;
 
             String promVideo = siguienteVideoPromocional();
+            String promVideoPath = promVideo == null ? null : buildPath(pathVideosMP3, promVideo);
             mMediaPlayer.playAudio(
                     mPlayList.getSongGender(),
                     mPlayList.getSinger(),
                     mPlayList.songToPlay(),
-                    buildPath(pathVideosMP3, promVideo));
+                    promVideoPath);
         } else {
             log("=== FORMATO NO VALIDO: " + mPlayList.songToPlay() + " ===");
-            nextSong();
+            advanceQueueNow();
             return;
         }
 
@@ -842,7 +843,10 @@ class Interface extends JFrame {
             return;
         }
         ultimaTransicionMs = ahora;
+        advanceQueueNow();
+    }
 
+    private void advanceQueueNow() {
         // Limpiar estado de videos promocionales
         videosPromocionalesPendientes.clear();
         videoPromocionalActual = null;
