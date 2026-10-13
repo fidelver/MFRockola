@@ -49,7 +49,7 @@ class MediaPlayer {
             mediaPlayerContainer.add(canvas, BorderLayout.CENTER);
 
             mediaPlayerFactory = new MediaPlayerFactory(
-                    "--avcodec-hw=none",
+                    "--avcodec-hw=vaapi",
                     "--quiet",
                     "--no-video-title-show",
                     "--no-stats",
