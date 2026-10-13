@@ -1,128 +1,212 @@
 package com.mfrockola.classes;
 
-import com.sun.jna.Native;
 import com.sun.jna.NativeLibrary;
-import uk.co.caprica.vlcj.binding.LibVlc;
-import uk.co.caprica.vlcj.player.MediaPlayerFactory;
+import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
+import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
-import uk.co.caprica.vlcj.runtime.RuntimeUtil;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 
-/*
-    This class is responsible for calling the VLC instance to create the media player
+/**
+ * Owns the native VLCJ resources used by MFRockola.
+ *
+ * VLCJ is intentionally hidden behind this class so the main Swing interface
+ * does not depend on the VLCJ API or its callback threading model.
  */
-
 class MediaPlayer {
 
-    EmbeddedMediaPlayer embeddedMediaPlayer;
-    EmbeddedMediaPlayer embeddedMediaPlayerMp3;
+    enum Channel {
+        VIDEO,
+        AUDIO
+    }
 
-    String pathSongs;
+    interface Listener {
+        void finished(Channel channel);
+        void error(Channel channel);
+    }
 
-    private JPanel mediaPlayerContainer;
+    private final EmbeddedMediaPlayer videoPlayer;
+    private final EmbeddedMediaPlayer audioPlayer;
+    private final MediaPlayerFactory mediaPlayerFactory;
+    private final JPanel mediaPlayerContainer;
+    private final String pathSongs;
+
+    private Listener listener;
+    private boolean released;
 
     MediaPlayer(String pathVLC, String pathSongs) {
         this.pathSongs = pathSongs;
 
         try {
-            NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(), pathVLC);
-            Native.loadLibrary(RuntimeUtil.getLibVlcLibraryName(), LibVlc.class);
+            configureNativeSearchPath(pathVLC);
 
             Canvas canvas = new Canvas();
             canvas.setBackground(Color.BLACK);
 
-            mediaPlayerContainer = new JPanel();
-            mediaPlayerContainer.setLayout(new BorderLayout());
+            mediaPlayerContainer = new JPanel(new BorderLayout());
             mediaPlayerContainer.add(canvas, BorderLayout.CENTER);
 
-MediaPlayerFactory mediaPlayerFactory = new MediaPlayerFactory(
-        "--avcodec-hw=none",
-        "--quiet",
-        "--no-video-title-show",
-        "--no-stats",
-        "--no-snapshot-preview",
-        "--verbose=-1");
-            embeddedMediaPlayer = mediaPlayerFactory.newEmbeddedMediaPlayer();
-            embeddedMediaPlayer.setVideoSurface(mediaPlayerFactory.newVideoSurface(canvas));
-            embeddedMediaPlayerMp3 = mediaPlayerFactory.newEmbeddedMediaPlayer();
+            mediaPlayerFactory = new MediaPlayerFactory(
+                    "--avcodec-hw=none",
+                    "--quiet",
+                    "--no-video-title-show",
+                    "--no-stats",
+                    "--no-snapshot-preview",
+                    "--verbose=-1");
 
-        } catch (UnsatisfiedLinkError error) {
-            JOptionPane.showMessageDialog(null,
-                    "No se encuentran las librerias de VLC, intente reinstalar VLC y configure el directorio correctamente. Si el problema persiste y su version de Java es de 64Bits pruebe instalando VLC de 64 Bits.");
-            System.exit(1);
+            videoPlayer = mediaPlayerFactory.mediaPlayers().newEmbeddedMediaPlayer();
+            videoPlayer.videoSurface().set(mediaPlayerFactory.videoSurfaces().newVideoSurface(canvas));
+            audioPlayer = mediaPlayerFactory.mediaPlayers().newEmbeddedMediaPlayer();
+
+            registerEvents(videoPlayer, Channel.VIDEO);
+            registerEvents(audioPlayer, Channel.AUDIO);
+        } catch (UnsatisfiedLinkError | RuntimeException error) {
+            throw new IllegalStateException(
+                    "No fue posible inicializar VLC/LibVLC. Verifique la instalación y arquitectura de VLC.", error);
         }
+    }
+
+    private static void configureNativeSearchPath(String pathVLC) {
+        if (pathVLC == null || pathVLC.trim().isEmpty()) {
+            return;
+        }
+        File directory = new File(pathVLC);
+        if (directory.isDirectory()) {
+            NativeLibrary.addSearchPath("vlc", directory.getAbsolutePath());
+            NativeLibrary.addSearchPath("vlccore", directory.getAbsolutePath());
+        }
+    }
+
+    private void registerEvents(EmbeddedMediaPlayer player, Channel channel) {
+        player.events().addMediaPlayerEventListener(new MediaPlayerEventAdapter() {
+            @Override
+            public void finished(uk.co.caprica.vlcj.player.base.MediaPlayer mediaPlayer) {
+                dispatchToEdt(() -> {
+                    if (listener != null && !released) {
+                        listener.finished(channel);
+                    }
+                });
+            }
+
+            @Override
+            public void error(uk.co.caprica.vlcj.player.base.MediaPlayer mediaPlayer) {
+                dispatchToEdt(() -> {
+                    if (listener != null && !released) {
+                        listener.error(channel);
+                    }
+                });
+            }
+        });
+    }
+
+    private static void dispatchToEdt(Runnable task) {
+        if (SwingUtilities.isEventDispatchThread()) {
+            task.run();
+        } else {
+            SwingUtilities.invokeLater(task);
+        }
+    }
+
+    void setListener(Listener listener) {
+        this.listener = listener;
     }
 
     JPanel getMediaPlayerContainer() {
         return mediaPlayerContainer;
     }
 
-    // NUEVO: detener el reproductor de video
+    boolean isAudioPlaying() {
+        return !released && audioPlayer.status().isPlaying();
+    }
+
+    void stopCurrent() {
+        if (released) {
+            return;
+        }
+        if (audioPlayer.status().isPlaying()) {
+            audioPlayer.controls().stop();
+        } else if (videoPlayer.status().isPlaying()) {
+            videoPlayer.controls().stop();
+        }
+    }
+
     void stopVideo() {
-        if (embeddedMediaPlayer.isPlaying()) {
-            embeddedMediaPlayer.stop();
+        if (!released && videoPlayer.status().isPlaying()) {
+            videoPlayer.controls().stop();
         }
     }
 
-    // NUEVO: detener el reproductor de mp3
-    void stopMp3() {
-        if (embeddedMediaPlayerMp3.isPlaying()) {
-            embeddedMediaPlayerMp3.stop();
+    void stopAudio() {
+        if (!released && audioPlayer.status().isPlaying()) {
+            audioPlayer.controls().stop();
         }
     }
 
-    // NUEVO: detener ambos
     void stopAll() {
         stopVideo();
-        stopMp3();
+        stopAudio();
     }
 
-    // Reproduce el video de fondo del MP3 (una sola vez, sin audio).
-    // La rotación entre videos se gestiona desde Interface.java.
     void playBackgroundVideo(String path) {
-        if (path == null || path.isEmpty()) return;
+        if (released || path == null || path.isEmpty()) {
+            return;
+        }
 
         File promotionalVideo = new File(path);
-        if (!promotionalVideo.isFile()) return;
+        if (!promotionalVideo.isFile()) {
+            return;
+        }
 
-        embeddedMediaPlayer.playMedia(
-                promotionalVideo.getAbsolutePath(),
-                ":no-audio");
+        videoPlayer.media().play(promotionalVideo.getAbsolutePath(), ":no-audio");
     }
 
-    // Reproducir audio + video de fondo en bucle
     void playAudio(String path, String pathPromotionalVideo) {
         stopVideo();
-        embeddedMediaPlayerMp3.playMedia(path);
+        audioPlayer.media().play(path);
         playBackgroundVideo(pathPromotionalVideo);
     }
 
-    // Reproducir audio + video de fondo en bucle
     void playAudio(String gender, String singer, String songName, String pathPromotionalVideo) {
         stopVideo();
-        embeddedMediaPlayerMp3.playMedia(
+        audioPlayer.media().play(
                 new File(pathSongs, gender + File.separator + singer + File.separator + songName).getPath());
         playBackgroundVideo(pathPromotionalVideo);
     }
 
-    // Reproducir video (detiene cualquier MP3 anterior)
     void playVideo(String path) {
-        stopMp3();
-        embeddedMediaPlayer.playMedia(path);
-    }
-        // Reproducir video en bucle infinito (para promocional.mpg en reposo)
-    void playVideoLoop(String path) {
-        stopMp3();
-        embeddedMediaPlayer.playMedia(path, ":input-repeat=65535");
+        stopAudio();
+        videoPlayer.media().play(path);
     }
 
-    // Reproducir video (detiene cualquier MP3 anterior)
+    void playVideoLoop(String path) {
+        stopAudio();
+        videoPlayer.media().play(path, ":input-repeat=65535");
+    }
+
     void playVideo(String gender, String singer, String songName) {
-        stopMp3();
-        embeddedMediaPlayer.playMedia(
+        stopAudio();
+        videoPlayer.media().play(
                 new File(pathSongs, gender + File.separator + singer + File.separator + songName).getPath());
+    }
+
+    void release() {
+        if (released) {
+            return;
+        }
+        released = true;
+        listener = null;
+        try {
+            videoPlayer.controls().stop();
+        } catch (RuntimeException ignored) {
+        }
+        try {
+            audioPlayer.controls().stop();
+        } catch (RuntimeException ignored) {
+        }
+        videoPlayer.release();
+        audioPlayer.release();
+        mediaPlayerFactory.release();
     }
 }

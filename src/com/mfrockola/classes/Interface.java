@@ -4,8 +4,6 @@ import com.mfrockola.android.InternetConnection;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import uk.co.caprica.vlcj.player.MediaPlayerEventAdapter;
-
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
@@ -34,7 +32,6 @@ class Interface extends JFrame {
     private enum EstadoSistema { REPOSO, COLA }
 
     private volatile EstadoSistema estadoActual = EstadoSistema.REPOSO;
-    private volatile boolean deteniendoInternamente = false;
     private volatile boolean itemActualEsMp3 = false;
     private volatile long ultimaTransicionMs = 0;
 
@@ -317,16 +314,23 @@ class Interface extends JFrame {
         getContentPane().add(mBackgroundImagePanel);
 
         setUndecorated(true);
-        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                if (mMediaPlayer != null) {
+                    mMediaPlayer.release();
+                }
+                dispose();
+            }
+        });
         setResizable(false);
         setSize(resolution);
         setVisible(true);
         requestFocusInWindow();
 
         MediaPlayerManager sMediaPlayerManager = new MediaPlayerManager();
-
-        mMediaPlayer.embeddedMediaPlayer.addMediaPlayerEventListener(sMediaPlayerManager);
-        mMediaPlayer.embeddedMediaPlayerMp3.addMediaPlayerEventListener(sMediaPlayerManager);
+        mMediaPlayer.setListener(sMediaPlayerManager);
 
         // Arranque: si hay cola guardada, la reproducimos. Si no, REPOSO.
         if (mPlayList.songToPlay() == null) {
@@ -380,11 +384,8 @@ class Interface extends JFrame {
 
                         if (optionPane.getValue()!=null && optionPane.getValue().equals(JOptionPane.OK_OPTION)) {
                             if (new String(passwordPanel.getPassword()).equals(password)) {
-                                if (mMediaPlayer.embeddedMediaPlayerMp3.isPlaying()) {
-                                    mMediaPlayer.embeddedMediaPlayerMp3.stop();
-                                } else {
-                                    mMediaPlayer.embeddedMediaPlayer.stop();
-                                }
+                                mMediaPlayer.stopCurrent();
+                                nextSong();
                                 dlg.dispatchEvent(new WindowEvent(dlg, WindowEvent.WINDOW_CLOSING));
                                 dlg.dispose();
                             }
@@ -527,7 +528,12 @@ class Interface extends JFrame {
 
         mBackgroundImagePanel.add(mainPanel,BorderLayout.CENTER);
 
-        mMediaPlayer = new MediaPlayer(pathVLC,pathSongs);
+        try {
+            mMediaPlayer = new MediaPlayer(pathVLC, pathSongs);
+        } catch (IllegalStateException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error de VLC", JOptionPane.ERROR_MESSAGE);
+            throw ex;
+        }
         videoPanel = new JPanel();
         videoPanel.setLayout(new BorderLayout());
         videoPanel.setBounds((int)(widthScreen/1.633), (int)(heightScreen/16.340),(int)(widthScreen/2.732), (int)(heightScreen/2.7137));
@@ -587,12 +593,7 @@ class Interface extends JFrame {
     // ==================================================================
 
     private void detenerReproductores() {
-        deteniendoInternamente = true;
-        try {
-            mMediaPlayer.stopAll();
-        } finally {
-            deteniendoInternamente = false;
-        }
+        mMediaPlayer.stopAll();
     }
 
     private void entrarEnReposo() {
@@ -783,65 +784,58 @@ class Interface extends JFrame {
     // ==================================================================
     // Listener de VLCJ
     // ==================================================================
-    private class MediaPlayerManager extends MediaPlayerEventAdapter {
+    private class MediaPlayerManager implements MediaPlayer.Listener {
 
         @Override
-        public void stopped(uk.co.caprica.vlcj.player.MediaPlayer mediaPlayer) {
-            if (deteniendoInternamente) return;
-            if (estadoActual != EstadoSistema.COLA || mPlayList.songToPlay() == null) return;
-
-            boolean esMp3 = (mediaPlayer == mMediaPlayer.embeddedMediaPlayerMp3);
-            boolean esVideo = (mediaPlayer == mMediaPlayer.embeddedMediaPlayer);
-
-            // Solo el reproductor que corresponde al item actual decide
-            if (itemActualEsMp3 && !esMp3) return;    // MP3 sonando + video detenido → ignorar
-            if (!itemActualEsMp3 && !esVideo) return; // VIDEO sonando + mp3 detenido → ignorar
-
-            log("=== VLCJ STOPPED (" + (esMp3 ? "MP3" : "VIDEO") + ") → nextSong ===");
-            nextSong();
-        }
-
-        @Override
-        public void playing(uk.co.caprica.vlcj.player.MediaPlayer mediaPlayer) {
-            // Log opcional (silenciado)
-        }
-
-        @Override
-        public void finished(uk.co.caprica.vlcj.player.MediaPlayer mediaPlayer) {
+        public void finished(MediaPlayer.Channel channel) {
             if (estadoActual != EstadoSistema.COLA || mPlayList.songToPlay() == null) {
                 return;
             }
 
-            boolean esMp3 = (mediaPlayer == mMediaPlayer.embeddedMediaPlayerMp3);
-            boolean esVideo = (mediaPlayer == mMediaPlayer.embeddedMediaPlayer);
-
-            // CASO 1: MP3 sonando + video de fondo terminó → ROTAR al siguiente video
-            if (itemActualEsMp3 && esVideo) {
-                String siguiente = siguienteVideoPromocional();
-                if (siguiente != null) {
-                    log("=== ROTANDO VIDEO PROMOCIONAL DE FONDO: " + siguiente + " ===");
-                    mMediaPlayer.playBackgroundVideo(buildPath(pathVideosMP3, siguiente));
-                } else {
-                    log("=== NO HAY MAS VIDEOS PROMOCIONALES PARA ROTAR ===");
-                }
+            if (itemActualEsMp3 && channel == MediaPlayer.Channel.VIDEO) {
+                rotarVideoPromocional();
                 return;
             }
 
-            // CASO 2: MP3 sonando + MP3 terminó → avanzar al siguiente item
-            if (itemActualEsMp3 && esMp3) {
+            if (itemActualEsMp3 && channel == MediaPlayer.Channel.AUDIO) {
                 log("=== VLCJ FINISHED (MP3) ===");
                 nextSong();
                 return;
             }
 
-            // CASO 3: VIDEO sonando + video terminó → avanzar al siguiente item
-            if (!itemActualEsMp3 && esVideo) {
+            if (!itemActualEsMp3 && channel == MediaPlayer.Channel.VIDEO) {
                 log("=== VLCJ FINISHED (VIDEO) ===");
                 nextSong();
+            }
+        }
+
+        @Override
+        public void error(MediaPlayer.Channel channel) {
+            if (estadoActual != EstadoSistema.COLA || mPlayList.songToPlay() == null) {
                 return;
             }
 
-            // Otros casos: ignorar (MP3 residual mientras video sonando, etc.)
+            if (itemActualEsMp3 && channel == MediaPlayer.Channel.VIDEO) {
+                log("=== VLCJ ERROR EN VIDEO PROMOCIONAL; ROTANDO ===");
+                rotarVideoPromocional();
+                return;
+            }
+
+            if ((itemActualEsMp3 && channel == MediaPlayer.Channel.AUDIO)
+                    || (!itemActualEsMp3 && channel == MediaPlayer.Channel.VIDEO)) {
+                log("=== VLCJ ERROR EN ITEM ACTUAL; AVANZANDO ===");
+                nextSong();
+            }
+        }
+
+        private void rotarVideoPromocional() {
+            String siguiente = siguienteVideoPromocional();
+            if (siguiente != null) {
+                log("=== ROTANDO VIDEO PROMOCIONAL DE FONDO: " + siguiente + " ===");
+                mMediaPlayer.playBackgroundVideo(buildPath(pathVideosMP3, siguiente));
+            } else {
+                log("=== NO HAY MAS VIDEOS PROMOCIONALES PARA ROTAR ===");
+            }
         }
     }
 
@@ -1168,11 +1162,8 @@ class Interface extends JFrame {
                     labelMusicalGenre.setText("Genero Musical: " + listMusicData.getNameOfGender());
                 }
             } else if (evento.getKeyCode()==keyNextSong && mPlayList.songToPlay()!=null) {
-                if (mMediaPlayer.embeddedMediaPlayerMp3.isPlaying()) {
-                    mMediaPlayer.embeddedMediaPlayerMp3.stop();
-                } else {
-                    mMediaPlayer.embeddedMediaPlayer.stop();
-                }
+                mMediaPlayer.stopCurrent();
+                nextSong();
             }
             else if (evento.getKeyCode()==keyAddCredit) {
                 credits = credits + amountOfCredits;
