@@ -1,6 +1,5 @@
 package com.mfrockola.classes;
 
-import com.mfrockola.android.InternetConnection;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -1007,10 +1006,6 @@ class Interface extends JFrame {
             {
                 mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
             }
-            else if (evento.getKeyCode()==77) {
-                Thread ic = new Thread(new InternetConnection());
-            }
-
             if (mSongSelector.play)
             {
                 int numero;
