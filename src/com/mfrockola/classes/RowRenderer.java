@@ -13,7 +13,7 @@ import javax.swing.ListCellRenderer;
  */
 
 // Extend JLabel and implement ListCellRenderer
-class RowRenderer extends JLabel implements ListCellRenderer {
+class RowRenderer extends JLabel implements ListCellRenderer<Song> {
 	// We put the two background colors as private variables
 	private Color mColor1;
 	private Color mColor2;
@@ -31,7 +31,7 @@ class RowRenderer extends JLabel implements ListCellRenderer {
 	// We override the ListCellRenderer method that is in charge of determining the state of the cells of a list.
 	// Accordingly, we apply the corresponding colors
 	@Override
-	public Component getListCellRendererComponent(JList list, Object value,
+	public Component getListCellRendererComponent(JList<? extends Song> list, Song value,
 			int index, boolean isSelected, boolean cellHasFocus) {
 
 		// If there are no songs in the list, it indicates, but, the name of the object is placed,

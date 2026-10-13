@@ -305,7 +305,7 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 
 		String [] tamanios = {"8","9","10","11","12","13","14","16","18","20","24","28","36","48","50","55","60","65","70","72"};
 
-		comboBoxTamanioDeFuenteSelector = new JComboBox(tamanios);
+		comboBoxTamanioDeFuenteSelector = new JComboBox<>(tamanios);
 		comboBoxTamanioDeFuenteSelector.setBounds(498,216,43,23);
 		panel3.add(comboBoxTamanioDeFuenteSelector);
 
@@ -752,7 +752,7 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 			}
 		});
 
-		comboBoxTamanioDeFuente = new JComboBox(tamanios);
+		comboBoxTamanioDeFuente = new JComboBox<>(tamanios);
 		comboBoxTamanioDeFuente.setBounds(341,50,43,23);
 		panelCeldas.add(comboBoxTamanioDeFuente);
 

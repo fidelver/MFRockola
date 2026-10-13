@@ -174,7 +174,7 @@ public class SettingsManager {
 
 
     void writeDefaultSettings(){
-        ArrayList newSettings = new ArrayList();
+        ArrayList<KeyPairValue> newSettings = new ArrayList<>();
 
         // Panel TIME
         newSettings.add(new KeyPairValue(KEY_RANDOM_SONG, 1));
@@ -242,7 +242,7 @@ public class SettingsManager {
             settings = new JSONObject(settingsNew);
             KeyPairValue keyPairValue;
             for (int i = 0; i < newSettings.size(); i++){
-                keyPairValue = (KeyPairValue) newSettings.get(i);
+                keyPairValue = newSettings.get(i);
                 settings.put(keyPairValue.key,keyPairValue.value);
             }
 

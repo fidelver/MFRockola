@@ -69,7 +69,7 @@ class PlayList {
         return songJsonObject;
     }
 
-    Object[] getPlayList(){
-        return mPlayList.toArray();
+    Song[] getPlayList(){
+        return mPlayList.toArray(new Song[0]);
     }
 }

@@ -121,8 +121,8 @@ class Interface extends JFrame {
 
     private ListMusic listMusicData;
 
-    private JList mSongListInterface;
-    private JList playListInterface;
+    private JList<Song> mSongListInterface;
+    private JList<Song> playListInterface;
 
     private JLabel labelMusicalGenre;
     private JLabel labelSongPlayingBottom;
@@ -472,7 +472,7 @@ class Interface extends JFrame {
 
         listMusicData = new ListMusic(pathSongs,pathVideosMP3);
 
-        mSongListInterface = new JList();
+        mSongListInterface = new JList<>();
         mSongListInterface.setCellRenderer(new RowRenderer(new Font(fontCells,
                 fontCellsBold,fontCellsSize),fontCellsColor,
                 color1, color2));
@@ -486,7 +486,7 @@ class Interface extends JFrame {
         mScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         mScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
 
-        playListInterface = new JList();
+        playListInterface = new JList<>();
         playListInterface.setListData(mPlayList.getPlayList());
         playListInterface.setCellRenderer(new RowRenderer(new Font(fontCells,
                 fontCellsBold, fontCellsSize),fontCellsColor,
@@ -513,7 +513,7 @@ class Interface extends JFrame {
             if (defaultBackground) {
                 mBackgroundImagePanel = new BackgroundImagePanel(this.getClass().getResource("/com/mfrockola/imagenes/fondo.jpg"));
             } else {
-                mBackgroundImagePanel = new BackgroundImagePanel(new URL("file:"+pathBackground));
+                mBackgroundImagePanel = new BackgroundImagePanel(new File(pathBackground).toURI().toURL());
             }
         } catch (MalformedURLException e) {
             e.printStackTrace();
