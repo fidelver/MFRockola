@@ -52,7 +52,6 @@ class Interface extends JFrame {
     private int resetSongs;
 
     private int amountOfCredits;
-    private boolean free;
     private boolean lockScreen;
     private int fontSelectorSize;
 
@@ -94,12 +93,10 @@ class Interface extends JFrame {
     private int creditsForPrize;
     private String typeOfPrize;
 
-    private int savedCredits;
     private JSONArray savedSongs;
 
     private SettingsManager mUserSettings;
-
-    private int credits;
+    private CreditManager creditManager;
 
     private int widthScreen;
     private int heightScreen;
@@ -160,7 +157,7 @@ class Interface extends JFrame {
             resetSongs = (int) mUserSettings.getSetting(KEY_RESET_SONGS);
 
             amountOfCredits = (int) mUserSettings.getSetting(KEY_AMOUNT_OF_CREDITS);
-            free = (boolean) mUserSettings.getSetting(KEY_FREE);
+            boolean freeMode = (boolean) mUserSettings.getSetting(KEY_FREE);
             lockScreen = (boolean) mUserSettings.getSetting(KEY_LOCK_SCREEN);
             fontSelectorSize = (int) mUserSettings.getSetting(KEY_FONT_SELECTOR_SIZE);
 
@@ -203,7 +200,8 @@ class Interface extends JFrame {
             typeOfPrize = (String) mUserSettings.getSetting(KEY_TYPE_OF_PRIZE);
             insertedCreditsForPrize = (int) mUserSettings.getSetting(KEY_INSERTED_CREDITS_FOR_PRIZE);
 
-            savedCredits = (int) mUserSettings.getSetting(KEY_SAVED_CREDITS);
+            int savedCredits = (int) mUserSettings.getSetting(KEY_SAVED_CREDITS);
+            creditManager = new CreditManager(savedCredits, amountOfCredits, freeMode);
             savedSongs = (JSONArray) mUserSettings.getSetting(KEY_SAVED_SONGS);
 
             if ((boolean) mUserSettings.getSetting(KEY_SAVE_SONGS) && savedSongs.length()>0) {
@@ -268,10 +266,10 @@ class Interface extends JFrame {
         initComponents();
 
         ActionListener changeLblCredits = e -> {
-            if (free) {
+            if (creditManager.isFreeMode()) {
                 labelCredits.setText("Creditos Libres");
             } else {
-                labelCredits.setText(String.format("Creditos: %d", credits));
+                labelCredits.setText(String.format("Creditos: %d", creditManager.balance()));
             }
             labelCredits.setForeground(Color.WHITE);
         };
@@ -348,10 +346,10 @@ class Interface extends JFrame {
             @Override
             public void mouseReleased(MouseEvent e) {
 
-                if(clickOfCredits==0 && !e.isMetaDown() && !free)
+                if(clickOfCredits==0 && !e.isMetaDown() && !creditManager.isFreeMode())
                 {
-                    credits = credits + amountOfCredits;
-                    labelCredits.setText(String.format("Creditos: %d", credits));
+                    creditManager.addConfiguredCredits();
+                    labelCredits.setText(String.format("Creditos: %d", creditManager.balance()));
                     updateCreditsSettings();
                     labelCredits.setForeground(Color.WHITE);
                     if (isFullScreen) {
@@ -397,10 +395,10 @@ class Interface extends JFrame {
                         counterClick = 0;
                     }
 
-                } else if (e.isMetaDown() && (int) mUserSettings.getSetting(KEY_CLICK_OF_CREDITS) == 1 && !free && !cancelSong) {
+                } else if (e.isMetaDown() && (int) mUserSettings.getSetting(KEY_CLICK_OF_CREDITS) == 1 && !creditManager.isFreeMode() && !cancelSong) {
 
-                    credits = credits + amountOfCredits;
-                    labelCredits.setText(String.format("Creditos: %d", credits));
+                    creditManager.addConfiguredCredits();
+                    labelCredits.setText(String.format("Creditos: %d", creditManager.balance()));
                     updateCreditsSettings();
                     labelCredits.setForeground(Color.WHITE);
                     if (isFullScreen) {
@@ -417,8 +415,6 @@ class Interface extends JFrame {
 
     private void initComponents() {
 
-        credits = savedCredits;
-
         resolution = Toolkit.getDefaultToolkit().getScreenSize();
 
         widthScreen = (int) resolution.getWidth();
@@ -431,10 +427,10 @@ class Interface extends JFrame {
         labelMusicalGenre.setFont(new Font("Calibri", Font.BOLD, 23));
         labelMusicalGenre.setBounds((int)(widthScreen/45.533), (int)(heightScreen/51.2), (int)(widthScreen/1.7603), 35);
 
-        if (free) {
+        if (creditManager.isFreeMode()) {
             labelCredits= new JLabel("Creditos Libres");
         } else {
-            labelCredits = new JLabel(String.format("Creditos: %d", savedCredits));
+            labelCredits = new JLabel(String.format("Creditos: %d", creditManager.balance()));
         }
 
         labelCredits.setForeground(Color.WHITE);
@@ -876,7 +872,7 @@ class Interface extends JFrame {
         insertedCredits++;
         mUserSettings.writeSetting(false,new KeyPairValue(KEY_USED_CREDITS,usedCredits));
         mUserSettings.writeSetting(false,new KeyPairValue(KEY_INSERTED_CREDITS,insertedCredits));
-        mUserSettings.writeSetting(true,new KeyPairValue(KEY_SAVED_CREDITS,credits));
+        mUserSettings.writeSetting(true,new KeyPairValue(KEY_SAVED_CREDITS,creditManager.balance()));
     }
 
     public void playSound() {
@@ -892,12 +888,13 @@ class Interface extends JFrame {
     }
 
     private void entregarPremiosYCreditosAdicionales() {
-        if (addAditionalCredit && !free) {
+        if (addAditionalCredit && !creditManager.isFreeMode() && everyAmountOfCredit > 0) {
             insertedCreditsForAditionalCredits++;
             if (insertedCreditsForAditionalCredits >= everyAmountOfCredit) {
                 insertedCreditsForAditionalCredits = 0;
-                credits = credits + numberAditionalCredits;
-                labelCredits.setText(String.format("Creditos: %d", credits));
+                creditManager.addCredits(numberAditionalCredits);
+                mUserSettings.writeSetting(true,new KeyPairValue(KEY_SAVED_CREDITS,creditManager.balance()));
+                labelCredits.setText(String.format("Creditos: %d", creditManager.balance()));
                 labelPromotions.setText(String.format("Ganaste %s creditos adicionales",
                         numberAditionalCredits));
                 labelPromotions.setVisible(true);
@@ -905,7 +902,7 @@ class Interface extends JFrame {
             }
         }
 
-        if (awardPrize && !free) {
+        if (awardPrize && !creditManager.isFreeMode() && creditsForPrize > 0) {
             insertedCreditsForPrize++;
             mUserSettings.writeSetting(true,new KeyPairValue(KEY_INSERTED_CREDITS_FOR_PRIZE,insertedCreditsForPrize));
             if (insertedCreditsForPrize % creditsForPrize == 0) {
@@ -952,7 +949,7 @@ class Interface extends JFrame {
                 Toolkit.getDefaultToolkit().setLockingKeyState(KeyEvent.VK_NUM_LOCK,true);
             }
 
-            if (evento.getKeyCode()==keyFullScreen && (credits > 0 || !lockScreen))
+            if (evento.getKeyCode()==keyFullScreen && creditManager.canNavigate(lockScreen))
             {
                 if (labelPromotions.isVisible()) {
                     labelPromotions.setVisible(false);
@@ -970,43 +967,43 @@ class Interface extends JFrame {
                 mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
             }
 
-            if ((evento.getKeyCode()==48 || evento.getKeyCode()==96) && (credits > 0 || !lockScreen))
+            if ((evento.getKeyCode()==48 || evento.getKeyCode()==96) && creditManager.canNavigate(lockScreen))
             {
                 mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
             }
-            else if ((evento.getKeyCode()==49 || evento.getKeyCode()==97) && (credits > 0 || !lockScreen))
+            else if ((evento.getKeyCode()==49 || evento.getKeyCode()==97) && creditManager.canNavigate(lockScreen))
             {
                 mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
             }
-            else if ((evento.getKeyCode()==50 || evento.getKeyCode()==98) && (credits > 0 || !lockScreen))
+            else if ((evento.getKeyCode()==50 || evento.getKeyCode()==98) && creditManager.canNavigate(lockScreen))
             {
                 mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
             }
-            else if ((evento.getKeyCode()==51 || evento.getKeyCode()==99) && (credits > 0 || !lockScreen))
+            else if ((evento.getKeyCode()==51 || evento.getKeyCode()==99) && creditManager.canNavigate(lockScreen))
             {
                 mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
             }
-            else if ((evento.getKeyCode()==52 || evento.getKeyCode()==100) && (credits > 0 || !lockScreen))
+            else if ((evento.getKeyCode()==52 || evento.getKeyCode()==100) && creditManager.canNavigate(lockScreen))
             {
                 mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
             }
-            else if ((evento.getKeyCode()==53 || evento.getKeyCode()==101) && (credits > 0 || !lockScreen))
+            else if ((evento.getKeyCode()==53 || evento.getKeyCode()==101) && creditManager.canNavigate(lockScreen))
             {
                 mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
             }
-            else if ((evento.getKeyCode()==54 || evento.getKeyCode()==102) && (credits > 0 || !lockScreen))
+            else if ((evento.getKeyCode()==54 || evento.getKeyCode()==102) && creditManager.canNavigate(lockScreen))
             {
                 mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
             }
-            else if ((evento.getKeyCode()==55 || evento.getKeyCode()==103) && (credits > 0 || !lockScreen))
+            else if ((evento.getKeyCode()==55 || evento.getKeyCode()==103) && creditManager.canNavigate(lockScreen))
             {
                 mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
             }
-            else if ((evento.getKeyCode()==56 || evento.getKeyCode()==104) && (credits > 0 || !lockScreen))
+            else if ((evento.getKeyCode()==56 || evento.getKeyCode()==104) && creditManager.canNavigate(lockScreen))
             {
                 mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
             }
-            else if ((evento.getKeyCode()==57 || evento.getKeyCode()==105) && (credits > 0 || !lockScreen))
+            else if ((evento.getKeyCode()==57 || evento.getKeyCode()==105) && creditManager.canNavigate(lockScreen))
             {
                 mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
             }
@@ -1032,7 +1029,7 @@ class Interface extends JFrame {
                 }
                 else
                 {
-                    if ((credits > 0 && condicion)||(free && condicion))
+                    if (creditManager.canSelectSong() && condicion)
                     {
                         Song cancionAReproducir = listMusicData.getSong(numero);
 
@@ -1046,11 +1043,11 @@ class Interface extends JFrame {
                             mUserSettings.writeSetting(false,new KeyPairValue(KEY_SAVED_SONGS,savedSongs));
                         }
 
-                        if (!free) {
-                            --credits;
-                            mUserSettings.writeSetting(true,new KeyPairValue(KEY_SAVED_CREDITS,credits));
+                        if (!creditManager.isFreeMode()) {
+                            creditManager.consumeForSong();
+                            mUserSettings.writeSetting(true,new KeyPairValue(KEY_SAVED_CREDITS,creditManager.balance()));
                             labelCredits.setForeground(Color.WHITE);
-                            labelCredits.setText(String.format("%s: %d","Creditos",credits));
+                            labelCredits.setText(String.format("%s: %d","Creditos",creditManager.balance()));
                         }
 
                         mSongSelector.play = false;
@@ -1058,7 +1055,7 @@ class Interface extends JFrame {
                         mSongSelector.labelSelector.setText("- - - - -");
                         mBlockedSongs.blockSong(numero);
 
-                        if (credits == 0 && !free) {
+                        if (creditManager.balance() == 0 && !creditManager.isFreeMode()) {
                             timerFullScreen.restart();
                         }
 
@@ -1082,12 +1079,12 @@ class Interface extends JFrame {
             else if (evento.getKeyCode()==122) {
                 String contrasenia = JOptionPane.showInputDialog("Introduzca la clave");
                 if (contrasenia != null && contrasenia.equals("12345")) {
-                    if (!free) {
-                        free = true;
+                    if (!creditManager.isFreeMode()) {
+                        creditManager.setFreeMode(true);
                         labelCredits.setText("Creditos: Libres");
                     } else {
-                        free = false;
-                        labelCredits.setText(String.format("Creditos: %d", credits));
+                        creditManager.setFreeMode(false);
+                        labelCredits.setText(String.format("Creditos: %d", creditManager.balance()));
                     }
                 } else {
                     JOptionPane.showMessageDialog(null, "Contraseña Incorrecta","Error",JOptionPane.ERROR_MESSAGE);
@@ -1095,7 +1092,7 @@ class Interface extends JFrame {
             } else if (evento.getKeyCode()==123) {
                 @SuppressWarnings("unused")
                 SettingsWindow config = new SettingsWindow();
-            } else if (evento.getKeyCode()==keyDownList && (credits > 0 || !lockScreen)) {
+            } else if (evento.getKeyCode()==keyDownList && creditManager.canNavigate(lockScreen)) {
                 if (isFullScreen) {
                     setFullScreen();
                 }
@@ -1120,7 +1117,7 @@ class Interface extends JFrame {
                     mSongListInterface.setSelectedIndex(mSongListInterface.getSelectedIndex()-20);
                     mSongListInterface.ensureIndexIsVisible(mSongListInterface.getSelectedIndex());
                 }
-            } else if (evento.getKeyCode()==keyUpList && (credits > 0 || !lockScreen)) {
+            } else if (evento.getKeyCode()==keyUpList && creditManager.canNavigate(lockScreen)) {
                 if (isFullScreen) {
                     setFullScreen();
                 }
@@ -1145,7 +1142,7 @@ class Interface extends JFrame {
                     mSongListInterface.setSelectedIndex(mSongListInterface.getSelectedIndex()+20);
                     mSongListInterface.ensureIndexIsVisible(mSongListInterface.getSelectedIndex());
                 }
-            } else if (evento.getKeyCode() == keyUpGenre && (credits > 0 || !lockScreen)) {
+            } else if (evento.getKeyCode() == keyUpGenre && creditManager.canNavigate(lockScreen)) {
                 if (isFullScreen) {
                     setFullScreen();
                 }
@@ -1158,7 +1155,7 @@ class Interface extends JFrame {
                     mSongListInterface.ensureIndexIsVisible(0);
                     labelMusicalGenre.setText("Genero Musical: " + listMusicData.getNameOfGender());
                 }
-            } else if (evento.getKeyCode() == keyDownGenre && (credits > 0 || !lockScreen)) {
+            } else if (evento.getKeyCode() == keyDownGenre && creditManager.canNavigate(lockScreen)) {
                 if (isFullScreen) {
                     setFullScreen();
                 }
@@ -1177,8 +1174,8 @@ class Interface extends JFrame {
                 nextSong();
             }
             else if (evento.getKeyCode()==keyAddCredit) {
-                credits = credits + amountOfCredits;
-                labelCredits.setText(String.format("Creditos: %d", credits));
+                creditManager.addConfiguredCredits();
+                labelCredits.setText(String.format("Creditos: %d", creditManager.balance()));
                 updateCreditsSettings();
                 labelCredits.setForeground(Color.WHITE);
                 if (isFullScreen) {
@@ -1186,11 +1183,10 @@ class Interface extends JFrame {
                 }
 
                 entregarPremiosYCreditosAdicionales();
-            } else if (evento.getKeyCode()==keyDeleteCredit && credits > 0) {
-                --credits;
-                mUserSettings.writeSetting(true,new KeyPairValue(KEY_SAVED_CREDITS,credits));
-                labelCredits.setText(String.format("Creditos: %d", credits));
-                if (credits == 0 && !free) {
+            } else if (evento.getKeyCode()==keyDeleteCredit && creditManager.removeOneCredit()) {
+                mUserSettings.writeSetting(true,new KeyPairValue(KEY_SAVED_CREDITS,creditManager.balance()));
+                labelCredits.setText(String.format("Creditos: %d", creditManager.balance()));
+                if (creditManager.balance() == 0 && !creditManager.isFreeMode()) {
                     timerFullScreen.restart();
                 }
             }
