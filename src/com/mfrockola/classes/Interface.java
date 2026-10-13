@@ -318,6 +318,7 @@ class Interface extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
+                KeyboardFocusManager.getCurrentKeyboardFocusManager().removeKeyEventDispatcher(mKeyboardManager);
                 if (mMediaPlayer != null) {
                     mMediaPlayer.release();
                 }
@@ -412,10 +413,7 @@ class Interface extends JFrame {
         });
 
         mKeyboardManager = new KeyboardManager();
-
-        this.addKeyListener(mKeyboardManager);
-
-        bottomPanel.addKeyListener(mKeyboardManager);
+        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(mKeyboardManager);
     }
 
     private void initComponents() {
@@ -480,7 +478,6 @@ class Interface extends JFrame {
                 fontCellsBold,fontCellsSize),fontCellsColor,
                 color1, color2));
         mSongListInterface.setListData(listMusicData.getGenderSongs(0));
-        mSongListInterface.addKeyListener(mKeyboardManager);
         mSongListInterface.setVisibleRowCount(20);
         mSongListInterface.setFocusable(false);
         mSongListInterface.setMaximumSize(getMaximumSize());
@@ -927,11 +924,26 @@ class Interface extends JFrame {
     // ==================================================================
     // KeyboardManager
     // ==================================================================
-    private class KeyboardManager extends KeyAdapter
+    private class KeyboardManager implements KeyEventDispatcher
     {
         SQLiteConsultor consultor = new SQLiteConsultor();
 
-        public void keyPressed(KeyEvent evento)
+        @Override
+        public boolean dispatchKeyEvent(KeyEvent evento) {
+            if (evento.getID() != KeyEvent.KEY_PRESSED || !isDisplayable()) {
+                return false;
+            }
+
+            Window activeWindow = KeyboardFocusManager.getCurrentKeyboardFocusManager().getActiveWindow();
+            if (activeWindow != Interface.this) {
+                return false;
+            }
+
+            keyPressed(evento);
+            return false;
+        }
+
+        private void keyPressed(KeyEvent evento)
         {
             if (evento.getKeyCode()==KeyEvent.VK_NUM_LOCK) {
                 Toolkit.getDefaultToolkit().setLockingKeyState(KeyEvent.VK_NUM_LOCK,true);
