@@ -163,8 +163,7 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 			{
 				updateSettings();
 				JOptionPane.showMessageDialog(null,"Configuración guardada correctamente");
-				new Thread(new Splash()).start();
-				Splash.moveMouse = true;
+				new Splash();
 				dispose();
 			}
 		});
