@@ -315,10 +315,7 @@ class Interface extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                KeyboardFocusManager.getCurrentKeyboardFocusManager().removeKeyEventDispatcher(mKeyboardManager);
-                if (mMediaPlayer != null) {
-                    mMediaPlayer.release();
-                }
+                shutdownResources();
                 dispose();
             }
         });
@@ -586,6 +583,32 @@ class Interface extends JFrame {
 
     private void detenerReproductores() {
         mMediaPlayer.stopAll();
+    }
+
+    private void shutdownResources() {
+        if (timerChangerLabelCredits != null) {
+            timerChangerLabelCredits.stop();
+        }
+        if (timerFullScreen != null) {
+            timerFullScreen.stop();
+        }
+        if (timerRandomSong != null) {
+            timerRandomSong.stop();
+        }
+        if (mKeyboardManager != null) {
+            KeyboardFocusManager.getCurrentKeyboardFocusManager().removeKeyEventDispatcher(mKeyboardManager);
+        }
+        if (promotionalSound != null) {
+            try {
+                promotionalSound.stop();
+            } finally {
+                promotionalSound.close();
+                promotionalSound = null;
+            }
+        }
+        if (mMediaPlayer != null) {
+            mMediaPlayer.release();
+        }
     }
 
     private void entrarEnReposo() {
@@ -879,8 +902,19 @@ class Interface extends JFrame {
         try {
             BufferedInputStream bis = new BufferedInputStream(getClass().getResourceAsStream("/com/mfrockola/sounds/felicitaciones.wav"));
             AudioInputStream ais = AudioSystem.getAudioInputStream(bis);
+            if (promotionalSound != null) {
+                promotionalSound.stop();
+                promotionalSound.close();
+            }
             promotionalSound = AudioSystem.getClip();
             promotionalSound.open(ais);
+            promotionalSound.addLineListener(event -> {
+                if (event.getType() == javax.sound.sampled.LineEvent.Type.STOP
+                        && promotionalSound != null && !promotionalSound.isRunning()) {
+                    promotionalSound.close();
+                    promotionalSound = null;
+                }
+            });
             promotionalSound.start();
         } catch (Exception e) {
             e.printStackTrace();
