@@ -1,0 +1,1 @@
+cp -r backup/pre_rockola_fix_XXXXXX/classes/* src/com/mfrockola/classes/

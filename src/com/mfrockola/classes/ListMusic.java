@@ -59,7 +59,7 @@ public class ListMusic {
             listaArchivos = directorio.list();
 
         for (int i = 0; i< listaArchivos.length; i++) {
-            File archivoActual = new File(String.format("%s\\%s", path, listaArchivos[i]));
+            File archivoActual = new File(path, listaArchivos[i]);
 
             if (archivoActual.isDirectory()) {
                 gender.add(new Gender(listaArchivos[i],countSongs(archivoActual)));
@@ -71,7 +71,16 @@ public class ListMusic {
         File directorioVideosPromocionales = new File(getPathPromVideos());
 
         if (directorioVideosPromocionales.isDirectory()) {
-            promVideos = directorioVideosPromocionales.list();
+            promVideos = directorioVideosPromocionales.list(new java.io.FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    String lowerName = name.toLowerCase();
+
+                    return lowerName.endsWith(".mp4")
+                            || lowerName.endsWith(".mpg")
+                            || lowerName.endsWith(".mpeg");
+                }
+            });
         }
     }
 
@@ -109,13 +118,14 @@ public class ListMusic {
 
         for (int i = 0; i < artistas.length; i++) {
 
-            File artista = new File(String.format("%s\\%s\\%s", path,file.getName(), artistas[i]));
+            File artista = new File(path, file.getName() + File.separator + artistas[i]);
 
             if (artista.isDirectory()) {
                 String [] canciones = artista.list();
 
                 for (int j = 0; j < canciones.length; j++) {
-                    if (Utils.getExtension(String.format("%s\\%s\\%s\\%s",path,file.getName(),artista.getName(),canciones[j]))!= Utils.EXT_UNKNOWN) {
+                    File cancion = new File(artista, canciones[j]);
+                    if (Utils.getExtension(cancion.getPath()) != Utils.EXT_UNKNOWN) {
                         provisionalGender.add(new Song(songNumber,file.getName(),artista.getName(),canciones[j]));
                         listOfSongs.add(new Song(songNumber,file.getName(),artista.getName(),canciones[j]));
                         songNumber++;
@@ -145,8 +155,19 @@ public class ListMusic {
     }
 
     public String getPromVideo() {
-        String promVideo = promVideos[random.nextInt(promVideos.length)];
-        return promVideo;
+        if (promVideos == null || promVideos.length == 0) {
+            return null;
+        }
+
+        return promVideos[random.nextInt(promVideos.length)];
+    }
+
+    // NUEVO: devuelve copia de todos los videos promocionales disponibles
+    public String[] getAllPromVideos() {
+        if (promVideos == null) {
+            return new String[0];
+        }
+        return promVideos.clone();
     }
 
     public String getPathPromVideos() {

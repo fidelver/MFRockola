@@ -12,6 +12,11 @@ class BlockedSongs
     private int blockedSongs[] = {-1};
 	
 	BlockedSongs(int minutes) {
+        // Do not create a 0 ms repeating Timer
+        if (minutes <= 0) {
+            return;
+        }
+
         // Set the delay in minutes
         int delay = 1000*60*minutes;
 

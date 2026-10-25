@@ -1,11 +1,8 @@
 package com.mfrockola.classes;
 
-import com.mfrockola.android.InternetConnection;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import uk.co.caprica.vlcj.player.MediaPlayerEventAdapter;
-
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
@@ -24,16 +21,37 @@ import static com.mfrockola.classes.SettingsManager.*;
 import static com.mfrockola.classes.Utils.*;
 
 /**
- * This class is the center of MFRockola. From this class we instantiate all the others
- * and it is what we see from the screen
+ * This class is the center of MFRockola.
  */
 class Interface extends JFrame {
+
+    // ------------------------------------------------------------------
+    // Estado del sistema
+    // ------------------------------------------------------------------
+    private enum EstadoSistema { REPOSO, COLA }
+
+    private volatile EstadoSistema estadoActual = EstadoSistema.REPOSO;
+    private volatile boolean itemActualEsMp3 = false;
+    private volatile long ultimaTransicionMs = 0;
+
+    // NUEVO: rotación de videos promocionales durante el MP3
+    private java.util.List<String> videosPromocionalesPendientes = new java.util.ArrayList<>();
+    private String videoPromocionalActual = null;
+
+    // ------------------------------------------------------------------
+
+    private String buildPath(String... parts) {
+        File file = new File(parts[0]);
+        for (int i = 1; i < parts.length; i++) {
+            file = new File(file, parts[i]);
+        }
+        return file.getPath();
+    }
 
     private int randomSong;
     private int resetSongs;
 
     private int amountOfCredits;
-    private boolean free;
     private boolean lockScreen;
     private int fontSelectorSize;
 
@@ -75,104 +93,71 @@ class Interface extends JFrame {
     private int creditsForPrize;
     private String typeOfPrize;
 
-    private int savedCredits;
     private JSONArray savedSongs;
 
     private SettingsManager mUserSettings;
+    private CreditManager creditManager;
 
-    // This variable stores the amount of credits entered
-    private int credits;
-
-    // This pair of variables store the size of the screen to draw the interface
     private int widthScreen;
     private int heightScreen;
 
-    // List of songs that are blocked
     private BlockedSongs mBlockedSongs;
 
-    // Instance that stores the playlist
-    private PlayList mPlayList = new PlayList(); // Objeto de las musicas en reproduccion.
+    private PlayList mPlayList = new PlayList();
 
-    // Boolean that determines whether the screen is complete
     private boolean isFullScreen = false;
 
-    // Variable that stores the interface background
     private BackgroundImagePanel mBackgroundImagePanel;
 
-    // Panel containing the video surface
     private JPanel videoPanel;
     private JPanel panel;
 
-    // Panel containing the bottom interface information
     private JPanel bottomPanel;
 
-    // Dimension object that contains the width and height of the screen
     private Dimension resolution;
 
-    // ListMusic object that keeps the list of songs
     private ListMusic listMusicData;
 
-    // JList object containing in the interface all available videos in the configured directory
-    private JList mSongListInterface;
-    // JList object containing all the songs in playback in the interface
-    private JList playListInterface;
+    private JList<Song> mSongListInterface;
+    private JList<Song> playListInterface;
 
-    // JLabels of the interface
     private JLabel labelMusicalGenre;
     private JLabel labelSongPlayingBottom;
     private JLabel labelSongPlayingRight;
     private JLabel labelCredits;
     private JLabel labelPromotions;
 
-    // MediaPlayer object that has the video player
     private MediaPlayer mMediaPlayer;
 
-    // SongSelector object used to select songs
     private SongSelector mSongSelector;
 
-    // cancel song flag
     private boolean cancelSong;
 
-    // counter cancel click flag
     private int counterClick;
 
-    // when this integer reached the user settings, MFRockola give a prize
     private int insertedCreditsForAditionalCredits;
-
-    // when this integer reached the user settings, MFRockola give a prize
     private int insertedCreditsForPrize;
 
-    // Bars for the list of songs
     private JScrollPane mScrollPane;
 
-    // This timer controls the text that shows the credit tag
     private Timer timerChangerLabelCredits;
-
-    // this timer controls the automatic fullscreen
     private Timer timerFullScreen;
-
-    // This timer controls the error that sometimes occurs when the video screen is complete
-    private Timer timer;
-
-    // This timer controls the playback of a random song when there are no credits
+//    private Timer timer;
     private Timer timerRandomSong;
 
     private KeyboardManager mKeyboardManager;
 
-    // keep the promotional sound
     private Clip promotionalSound;
 
     Interface() {
         try {
             mUserSettings = new SettingsManager();
 
-            // init vars
-
             randomSong = (int) mUserSettings.getSetting(KEY_RANDOM_SONG);
             resetSongs = (int) mUserSettings.getSetting(KEY_RESET_SONGS);
 
             amountOfCredits = (int) mUserSettings.getSetting(KEY_AMOUNT_OF_CREDITS);
-            free = (boolean) mUserSettings.getSetting(KEY_FREE);
+            boolean freeMode = (boolean) mUserSettings.getSetting(KEY_FREE);
             lockScreen = (boolean) mUserSettings.getSetting(KEY_LOCK_SCREEN);
             fontSelectorSize = (int) mUserSettings.getSetting(KEY_FONT_SELECTOR_SIZE);
 
@@ -215,7 +200,8 @@ class Interface extends JFrame {
             typeOfPrize = (String) mUserSettings.getSetting(KEY_TYPE_OF_PRIZE);
             insertedCreditsForPrize = (int) mUserSettings.getSetting(KEY_INSERTED_CREDITS_FOR_PRIZE);
 
-            savedCredits = (int) mUserSettings.getSetting(KEY_SAVED_CREDITS);
+            int savedCredits = (int) mUserSettings.getSetting(KEY_SAVED_CREDITS);
+            creditManager = new CreditManager(savedCredits, amountOfCredits, freeMode);
             savedSongs = (JSONArray) mUserSettings.getSetting(KEY_SAVED_SONGS);
 
             if ((boolean) mUserSettings.getSetting(KEY_SAVE_SONGS) && savedSongs.length()>0) {
@@ -235,8 +221,6 @@ class Interface extends JFrame {
                 mUserSettings.writeSetting(true,new KeyPairValue(KEY_SAVED_SONGS,savedSongs));
             }
 
-            // End of init vars
-
             mBlockedSongs = new BlockedSongs(resetSongs);
 
             mSongSelector = new SongSelector(
@@ -251,35 +235,28 @@ class Interface extends JFrame {
 
             File file = new File(pathVLC);
             if (!file.exists()) {
-                JOptionPane.showMessageDialog(
-                        null,
+                JOptionPane.showMessageDialog(null,
                         "VLC no se encuentra instalado o el directorio no se encuentra.",
-                        "Error de VLC",
-                        JOptionPane.ERROR_MESSAGE);
+                        "Error de VLC", JOptionPane.ERROR_MESSAGE);
                 System.exit(-1);
             }
 
             file = new File(pathSongs);
-
             if (!file.exists()) {
-                JOptionPane.showMessageDialog(
-                        null,
+                JOptionPane.showMessageDialog(null,
                         "El directorio de musicas no se encuentra, verifiquelo e intente nuevamente.",
-                        "Error de Directorios",
-                        JOptionPane.ERROR_MESSAGE);
+                        "Error de Directorios", JOptionPane.ERROR_MESSAGE);
                 System.exit(-1);
             }
 
             file = new File(pathVideosMP3);
-
             if (!file.exists()) {
-                JOptionPane.showMessageDialog(
-                        null,
+                JOptionPane.showMessageDialog(null,
                         "El directorio de los videos predeterminados no se encuentra, verifiquelo e intente nuevamente.",
-                        "Error de Directorios",
-                        JOptionPane.ERROR_MESSAGE);
+                        "Error de Directorios", JOptionPane.ERROR_MESSAGE);
                 System.exit(-1);
             }
+            PromotionalVideoInstaller.install(pathVideosMP3);
         }
         catch (NullPointerException excepcion) {
             excepcion.printStackTrace();
@@ -289,12 +266,11 @@ class Interface extends JFrame {
         initComponents();
 
         ActionListener changeLblCredits = e -> {
-            if (free) {
+            if (creditManager.isFreeMode()) {
                 labelCredits.setText("Creditos Libres");
             } else {
-                labelCredits.setText(String.format("Creditos: %d", credits));
+                labelCredits.setText(String.format("Creditos: %d", creditManager.balance()));
             }
-
             labelCredits.setForeground(Color.WHITE);
         };
 
@@ -304,16 +280,16 @@ class Interface extends JFrame {
         ActionListener changeFullScreen = e -> {
             if (!isFullScreen) {
                 setFullScreen();
-
-                timer.restart();
+//                timer.restart();
             }
         };
 
+        // Al vencer el timer de cortesía se encola una cortesía aleatoria
         ActionListener play = e -> {
-            playRandomSong();
+            encolarCortesiaPorTimer();
         };
 
-        ActionListener pressKey = e -> {
+     /*   ActionListener pressKey = e -> {
             try {
                 Robot robot = new Robot();
                 robot.keyPress(120);
@@ -322,9 +298,9 @@ class Interface extends JFrame {
                 exception.printStackTrace();
             }
         };
-
-        timer = new Timer(500, pressKey);
-        timer.setRepeats(false);
+*/
+  //     timer = new Timer(500, pressKey);
+  //     timer.setRepeats(false);
 
         timerFullScreen = new Timer(10000, changeFullScreen);
         timerFullScreen.setRepeats(false);
@@ -335,70 +311,48 @@ class Interface extends JFrame {
         getContentPane().add(mBackgroundImagePanel);
 
         setUndecorated(true);
-        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                shutdownResources();
+                dispose();
+            }
+        });
+        setResizable(false);
         setSize(resolution);
         setVisible(true);
+        requestFocusInWindow();
 
         MediaPlayerManager sMediaPlayerManager = new MediaPlayerManager();
+        mMediaPlayer.setListener(sMediaPlayerManager);
 
-        mMediaPlayer.embeddedMediaPlayer.addMediaPlayerEventListener(sMediaPlayerManager);
-        mMediaPlayer.embeddedMediaPlayerMp3.addMediaPlayerEventListener(sMediaPlayerManager);
-
-        if (mPlayList.songToPlay()==null) {
+        // Arranque: si hay cola guardada, la reproducimos. Si no, REPOSO.
+        if (mPlayList.songToPlay() == null) {
             if (randomSong == 0) {
                 playRandomSong();
             } else {
-                if (randomSong != 0) {
-                    timerRandomSong.start();
-                }
+                entrarEnReposo();
             }
-        }
-
-        if (mPlayList.songToPlay()!=null) {
-            int extension = Utils.getExtension(String.format("%s\\%s\\%s\\%s", pathSongs,mPlayList.getSongGender(),mPlayList.getSinger(), mPlayList.songToPlay()));
-
-            if (extension == EXT_MP4 || extension == EXT_AVI || extension == EXT_MPG || extension == EXT_FLV || extension == EXT_MKV) {
-                mMediaPlayer.playVideo(mPlayList.getSongGender(),mPlayList.getSinger(),mPlayList.songToPlay());
-            } else if (extension == EXT_MP3 || extension == EXT_WMA || extension == EXT_WAV || extension == EXT_AAC) {
-                mMediaPlayer.playAudio(
-                        mPlayList.getSongGender(),
-                        mPlayList.getSinger(),
-                        mPlayList.songToPlay(),
-                        pathVideosMP3 + "\\" + listMusicData.getPromVideo());
-            }
-
-            labelSongPlayingBottom.setText(String.format("%05d - %s - %s - %s",
-                    mPlayList.getSongNumber(),
-                    mPlayList.getSongGender(),
-                    mPlayList.getSinger(),
-                    mPlayList.songToPlay()));
-            labelSongPlayingRight.setText(String.format("%05d - %s - %s - %s",
-                    mPlayList.getSongNumber(),mPlayList.getSongGender(),
-                    mPlayList.getSinger(), mPlayList.songToPlay()));
+        } else {
+            estadoActual = EstadoSistema.COLA;
+            procesarSiguienteEnCola();
         }
 
         addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseReleased(MouseEvent e)
-            {
+            public void mouseReleased(MouseEvent e) {
 
-                //  isMetaDown = rigth CLick
-
-                // Cuando se presiona click izquierdo y las canciones no se pueden cancelar
-
-                if(clickOfCredits==0 && !e.isMetaDown() && !free)
+                if(clickOfCredits==0 && !e.isMetaDown() && !creditManager.isFreeMode())
                 {
-                    credits = credits + amountOfCredits;
-                    labelCredits.setText(String.format("Creditos: %d", credits));
+                    creditManager.addConfiguredCredits();
+                    labelCredits.setText(String.format("Creditos: %d", creditManager.balance()));
                     updateCreditsSettings();
                     labelCredits.setForeground(Color.WHITE);
                     if (isFullScreen) {
                         setFullScreen();
                     }
-
                     entregarPremiosYCreditosAdicionales();
-
-                    // Click derecho y las canciones se pueden eliminar
 
                 } else if (cancelSong && e.isMetaDown() && mPlayList.songToPlay()!=null) {
 
@@ -421,31 +375,27 @@ class Interface extends JFrame {
                         });
 
                         dlg.setVisible(true);
+                        requestFocusInWindow();
 
                         if (optionPane.getValue()!=null && optionPane.getValue().equals(JOptionPane.OK_OPTION)) {
                             if (new String(passwordPanel.getPassword()).equals(password)) {
-                                if (mMediaPlayer.embeddedMediaPlayerMp3.isPlaying()) {
-                                    mMediaPlayer.embeddedMediaPlayerMp3.stop();
-                                } else {
-                                    mMediaPlayer.embeddedMediaPlayer.stop();
-                                }
+                                mMediaPlayer.stopCurrent();
+                                nextSong();
                                 dlg.dispatchEvent(new WindowEvent(dlg, WindowEvent.WINDOW_CLOSING));
-                                dlg.dispose(); // else java VM will wait for dialog to be disposed of (forever)
+                                dlg.dispose();
                             }
                         } else {
                             dlg.dispatchEvent(new WindowEvent(dlg, WindowEvent.WINDOW_CLOSING));
-                            dlg.dispose(); // else java VM will wait for dialog to be disposed of (forever)
+                            dlg.dispose();
                         }
 
                         counterClick = 0;
                     }
 
-                    // click derecho y las canciones no se pueden eliminar
+                } else if (e.isMetaDown() && (int) mUserSettings.getSetting(KEY_CLICK_OF_CREDITS) == 1 && !creditManager.isFreeMode() && !cancelSong) {
 
-                } else if (e.isMetaDown() && (int) mUserSettings.getSetting(KEY_CLICK_OF_CREDITS) == 1 && !free && !cancelSong) {
-
-                    credits = credits + amountOfCredits;
-                    labelCredits.setText(String.format("Creditos: %d", credits));
+                    creditManager.addConfiguredCredits();
+                    labelCredits.setText(String.format("Creditos: %d", creditManager.balance()));
                     updateCreditsSettings();
                     labelCredits.setForeground(Color.WHITE);
                     if (isFullScreen) {
@@ -457,15 +407,10 @@ class Interface extends JFrame {
         });
 
         mKeyboardManager = new KeyboardManager();
-
-        this.addKeyListener(mKeyboardManager);
-
-        bottomPanel.addKeyListener(mKeyboardManager);
+        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(mKeyboardManager);
     }
 
     private void initComponents() {
-
-        credits = savedCredits;
 
         resolution = Toolkit.getDefaultToolkit().getScreenSize();
 
@@ -474,17 +419,15 @@ class Interface extends JFrame {
 
         setIconImage(Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("/com/mfrockola/imagenes/icono.png")));
 
-        // Iniciar los labels
-
         labelMusicalGenre = new JLabel("Genero");
         labelMusicalGenre.setForeground(Color.WHITE);
         labelMusicalGenre.setFont(new Font("Calibri", Font.BOLD, 23));
         labelMusicalGenre.setBounds((int)(widthScreen/45.533), (int)(heightScreen/51.2), (int)(widthScreen/1.7603), 35);
 
-        if (free) {
+        if (creditManager.isFreeMode()) {
             labelCredits= new JLabel("Creditos Libres");
         } else {
-            labelCredits = new JLabel(String.format("Creditos: %d", savedCredits));
+            labelCredits = new JLabel(String.format("Creditos: %d", creditManager.balance()));
         }
 
         labelCredits.setForeground(Color.WHITE);
@@ -520,16 +463,13 @@ class Interface extends JFrame {
         labelPromotions.setBackground(Color.WHITE);
         labelPromotions.setBounds((widthScreen/2)-250,(heightScreen/2)-80,500,160);
 
-        // Iniciar las listas
+        listMusicData = new ListMusic(pathSongs,pathVideosMP3);
 
-        listMusicData = new ListMusic(pathSongs,pathVideosMP3); //Aqui falta la direccion de los videos promocionales
-
-        mSongListInterface = new JList();
+        mSongListInterface = new JList<>();
         mSongListInterface.setCellRenderer(new RowRenderer(new Font(fontCells,
                 fontCellsBold,fontCellsSize),fontCellsColor,
                 color1, color2));
         mSongListInterface.setListData(listMusicData.getGenderSongs(0));
-        mSongListInterface.addKeyListener(mKeyboardManager);
         mSongListInterface.setVisibleRowCount(20);
         mSongListInterface.setFocusable(false);
         mSongListInterface.setMaximumSize(getMaximumSize());
@@ -539,18 +479,15 @@ class Interface extends JFrame {
         mScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         mScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
 
-        playListInterface = new JList();
+        playListInterface = new JList<>();
         playListInterface.setListData(mPlayList.getPlayList());
         playListInterface.setCellRenderer(new RowRenderer(new Font(fontCells,
                 fontCellsBold, fontCellsSize),fontCellsColor,
                 color1, color2));
         playListInterface.setBounds((int)(widthScreen/1.633), (int)(heightScreen/1.52), (int)(widthScreen/2.732), (int)(heightScreen/3.051));
-//        listaDeReproduccion.setBounds(ancho - 530, alto - 260, 500, alto-461);
         playListInterface.setFocusable(false);
 
         labelMusicalGenre.setText("Genero Musical: "+ listMusicData.getNameOfGender());
-
-        // Iniciar los panel
 
         JPanel mainPanel = new JPanel();
         mainPanel.setOpaque(false);
@@ -569,7 +506,7 @@ class Interface extends JFrame {
             if (defaultBackground) {
                 mBackgroundImagePanel = new BackgroundImagePanel(this.getClass().getResource("/com/mfrockola/imagenes/fondo.jpg"));
             } else {
-                mBackgroundImagePanel = new BackgroundImagePanel(new URL("file:"+pathBackground));
+                mBackgroundImagePanel = new BackgroundImagePanel(new File(pathBackground).toURI().toURL());
             }
         } catch (MalformedURLException e) {
             e.printStackTrace();
@@ -580,7 +517,12 @@ class Interface extends JFrame {
 
         mBackgroundImagePanel.add(mainPanel,BorderLayout.CENTER);
 
-        mMediaPlayer = new MediaPlayer(pathVLC,pathSongs);
+        try {
+            mMediaPlayer = new MediaPlayer(pathVLC, pathSongs);
+        } catch (IllegalStateException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error de VLC", JOptionPane.ERROR_MESSAGE);
+            throw ex;
+        }
         videoPanel = new JPanel();
         videoPanel.setLayout(new BorderLayout());
         videoPanel.setBounds((int)(widthScreen/1.633), (int)(heightScreen/16.340),(int)(widthScreen/2.732), (int)(heightScreen/2.7137));
@@ -607,8 +549,10 @@ class Interface extends JFrame {
         mainPanel.add(playListInterface);
     }
 
-    private void setFullScreen()
-    {
+    // ==================================================================
+    // Gestión de fullscreen
+    // ==================================================================
+    private void setFullScreen() {
         if (!isFullScreen)
         {
             mScrollPane.setVisible(false);
@@ -622,52 +566,424 @@ class Interface extends JFrame {
         {
             videoPanel.setBounds((int)(widthScreen/1.633), (int)(heightScreen/16.340),(int)(widthScreen/2.732), (int)(heightScreen/2.7137));
             mScrollPane.setVisible(true);
+            requestFocusInWindow();
             mSongListInterface.setVisible(true);
+            requestFocusInWindow();
             panel.setVisible(true);
+            requestFocusInWindow();
             labelMusicalGenre.setVisible(true);
+            requestFocusInWindow();
             isFullScreen = false;
         }
     }
 
-    private void entregarPremiosYCreditosAdicionales() {
-        // creditosInsertados es la variable de control de los clicks
+    // ==================================================================
+    // Reproducción — modelo de estados REPOSO / COLA
+    // ==================================================================
 
-        if (addAditionalCredit && !free) {
-            insertedCreditsForAditionalCredits++;
-            if (insertedCreditsForAditionalCredits >= everyAmountOfCredit) {
-                // Aqui va la cuestion para controlar el cartel de los creditos adicionales
-                insertedCreditsForAditionalCredits = 0;
-                credits = credits + numberAditionalCredits;
-                labelCredits.setText(String.format("Creditos: %d", credits));
-                labelPromotions.setText(String.format("Ganaste %s creditos adicionales",
-                        numberAditionalCredits));
-                labelPromotions.setVisible(true);
+    private void detenerReproductores() {
+        mMediaPlayer.stopAll();
+    }
+
+    private void shutdownResources() {
+        if (timerChangerLabelCredits != null) {
+            timerChangerLabelCredits.stop();
+        }
+        if (timerFullScreen != null) {
+            timerFullScreen.stop();
+        }
+        if (timerRandomSong != null) {
+            timerRandomSong.stop();
+        }
+        if (mKeyboardManager != null) {
+            KeyboardFocusManager.getCurrentKeyboardFocusManager().removeKeyEventDispatcher(mKeyboardManager);
+        }
+        if (promotionalSound != null) {
+            try {
+                promotionalSound.stop();
+            } finally {
+                promotionalSound.close();
+                promotionalSound = null;
+            }
+        }
+        if (mMediaPlayer != null) {
+            mMediaPlayer.release();
+        }
+    }
+
+    private void entrarEnReposo() {
+        estadoActual = EstadoSistema.REPOSO;
+        itemActualEsMp3 = false;
+
+        // Limpiar estado de videos promocionales
+        videosPromocionalesPendientes.clear();
+        videoPromocionalActual = null;
+
+        File promotionalFile = new File(buildPath(pathVideosMP3, "promocional.mpg"));
+
+        if (promotionalFile.isFile()) {
+            log("=== ENTRANDO EN REPOSO: promocional.mpg ===");
+            log("Archivo: " + promotionalFile.getAbsolutePath());
+
+            if (!isFullScreen) {
+                setFullScreen();
+            }
+            mMediaPlayer.playVideoLoop(promotionalFile.getAbsolutePath());
+            timerRandomSong.restart();
+            log("=== TIMER DE CORTESIA INICIADO ===");
+        } else {
+            log("=== NO EXISTE promocional.mpg; solo TIMER ===");
+            timerRandomSong.restart();
+        }
+
+        labelSongPlayingBottom.setText("MFRockola");
+        labelSongPlayingRight.setText("Su selección musical");
+    }
+    
+    /**
+     * Devuelve el siguiente video promocional a reproducir como fondo de un MP3.
+     * Rota la lista sin repetir hasta agotarla. Cuando se agota, vuelve a hacer shuffle.
+     */
+    private String siguienteVideoPromocional() {
+        if (videosPromocionalesPendientes.isEmpty()) {
+            String[] todos = listMusicData.getAllPromVideos();
+            if (todos == null || todos.length == 0) {
+                return null;
+            }
+            java.util.List<String> copia = new java.util.ArrayList<>();
+            for (String v : todos) {
+                copia.add(v);
+            }
+            java.util.Collections.shuffle(copia);
+
+            // Evitar que el primero del nuevo shuffle sea el mismo que acabó de mostrarse
+            if (videoPromocionalActual != null && copia.size() > 1
+                    && copia.get(0).equals(videoPromocionalActual)) {
+                // intercambiar con otro al azar
+                int j = 1 + new java.util.Random().nextInt(copia.size() - 1);
+                java.util.Collections.swap(copia, 0, j);
+            }
+
+            videosPromocionalesPendientes.addAll(copia);
+        }
+
+        String siguiente = videosPromocionalesPendientes.remove(0);
+        videoPromocionalActual = siguiente;
+        return siguiente;
+    }    
+
+    private void procesarSiguienteEnCola() {
+        if (mPlayList.songToPlay() == null) {
+            entrarEnReposo();
+            return;
+        }
+
+        estadoActual = EstadoSistema.COLA;
+        timerRandomSong.stop();
+
+        int extension = Utils.getExtension(buildPath(
+                pathSongs,
+                mPlayList.getSongGender(),
+                mPlayList.getSinger(),
+                mPlayList.songToPlay()));
+
+        log("=== REPRODUCIENDO ITEM DE LA COLA ===");
+        log("Genero: " + mPlayList.getSongGender());
+        log("Artista: " + mPlayList.getSinger());
+        log("Archivo: " + mPlayList.songToPlay());
+
+        if (esVideo(extension)) {
+            itemActualEsMp3 = false;
+            if (!isFullScreen) {
+                setFullScreen();
+            }
+            mMediaPlayer.playVideo(
+                    mPlayList.getSongGender(),
+                    mPlayList.getSinger(),
+                    mPlayList.songToPlay());
+        } else if (esAudio(extension)) {
+            itemActualEsMp3 = true;
+
+            // Resetear la lista de videos promocionales al empezar un MP3 nuevo
+            videosPromocionalesPendientes.clear();
+            videoPromocionalActual = null;
+
+            String promVideo = siguienteVideoPromocional();
+            String promVideoPath = promVideo == null ? null : buildPath(pathVideosMP3, promVideo);
+            mMediaPlayer.playAudio(
+                    mPlayList.getSongGender(),
+                    mPlayList.getSinger(),
+                    mPlayList.songToPlay(),
+                    promVideoPath);
+        } else {
+            log("=== FORMATO NO VALIDO: " + mPlayList.songToPlay() + " ===");
+            advanceQueueNow();
+            return;
+        }
+
+        labelSongPlayingBottom.setText(String.format("%05d - %s - %s - %s",
+                mPlayList.getSongNumber(),
+                mPlayList.getSongGender(),
+                mPlayList.getSinger(),
+                mPlayList.songToPlay()));
+        labelSongPlayingRight.setText(String.format("%05d - %s - %s - %s",
+                mPlayList.getSongNumber(),mPlayList.getSongGender(),
+                mPlayList.getSinger(), mPlayList.songToPlay()));
+    }
+
+    private void encolarYArrancarSiProcede(Song song) {
+        boolean estabaEnReposo = (estadoActual == EstadoSistema.REPOSO);
+
+        mPlayList.addSong(song);
+        playListInterface.setListData(mPlayList.getPlayList());
+
+        if (estabaEnReposo) {
+            timerRandomSong.stop();
+            detenerReproductores();
+            estadoActual = EstadoSistema.COLA;
+            procesarSiguienteEnCola();
+        }
+    }
+
+    private void encolarCortesiaPorTimer() {
+        if (estadoActual == EstadoSistema.COLA) {
+            return;
+        }
+
+        int size = listMusicData.getSizeListOfSongs();
+        if (size <= 0) {
+            log("=== NO HAY CANCIONES PARA CORTESIA ===");
+            return;
+        }
+
+        Song cortesia = listMusicData.getSong(new Random().nextInt(size));
+        log("=== CORTESIA POR TIMER ===");
+        log("Genero: " + cortesia.getSongGenre());
+        log("Artista: " + cortesia.getSinger());
+        log("Archivo: " + cortesia.getSongName());
+
+        encolarYArrancarSiProcede(cortesia);
+    }
+
+    public void playRandomSong(){
+        Random random = new Random();
+        if (randomSong == 0) {
+            File file = new File(buildPath(pathSongs, "Promocionales", "Promocionales"));
+            if (file.isDirectory()) {
+                String [] list = file.list();
+                if (list == null || list.length == 0) return;
+                random = new Random();
+                int rand = random.nextInt(list.length);
+                String song = list[rand];
+                Song cancion = new Song(0,"Promocionales", "Promocionales", song);
+                log("=== VIDEO DE CORTESIA (Promocionales) ===");
+                log("Archivo: " + song);
+                encolarYArrancarSiProcede(cancion);
+                return;
             }
         }
 
-        if (awardPrize && !free) {
+        Song cancion = listMusicData.getSong(random.nextInt(listMusicData.getSizeListOfSongs()));
+        encolarYArrancarSiProcede(cancion);
+    }
+
+    private static boolean esVideo(int ext) {
+        return ext == EXT_MP4 || ext == EXT_AVI || ext == EXT_MPG
+                || ext == EXT_FLV || ext == EXT_MKV;
+    }
+
+    private static boolean esAudio(int ext) {
+        return ext == EXT_MP3 || ext == EXT_WMA
+                || ext == EXT_WAV || ext == EXT_AAC;
+    }
+
+    // ==================================================================
+    // Listener de VLCJ
+    // ==================================================================
+    private class MediaPlayerManager implements MediaPlayer.Listener {
+
+        @Override
+        public void finished(MediaPlayer.Channel channel) {
+            if (estadoActual != EstadoSistema.COLA || mPlayList.songToPlay() == null) {
+                return;
+            }
+
+            if (itemActualEsMp3 && channel == MediaPlayer.Channel.VIDEO) {
+                rotarVideoPromocional();
+                return;
+            }
+
+            if (itemActualEsMp3 && channel == MediaPlayer.Channel.AUDIO) {
+                log("=== VLCJ FINISHED (MP3) ===");
+                nextSong();
+                return;
+            }
+
+            if (!itemActualEsMp3 && channel == MediaPlayer.Channel.VIDEO) {
+                log("=== VLCJ FINISHED (VIDEO) ===");
+                nextSong();
+            }
+        }
+
+        @Override
+        public void error(MediaPlayer.Channel channel) {
+            if (estadoActual != EstadoSistema.COLA || mPlayList.songToPlay() == null) {
+                return;
+            }
+
+            if (itemActualEsMp3 && channel == MediaPlayer.Channel.VIDEO) {
+                log("=== VLCJ ERROR EN VIDEO PROMOCIONAL; ROTANDO ===");
+                rotarVideoPromocional();
+                return;
+            }
+
+            if ((itemActualEsMp3 && channel == MediaPlayer.Channel.AUDIO)
+                    || (!itemActualEsMp3 && channel == MediaPlayer.Channel.VIDEO)) {
+                log("=== VLCJ ERROR EN ITEM ACTUAL; AVANZANDO ===");
+                nextSong();
+            }
+        }
+
+        private void rotarVideoPromocional() {
+            String siguiente = siguienteVideoPromocional();
+            if (siguiente != null) {
+                log("=== ROTANDO VIDEO PROMOCIONAL DE FONDO: " + siguiente + " ===");
+                mMediaPlayer.playBackgroundVideo(buildPath(pathVideosMP3, siguiente));
+            } else {
+                log("=== NO HAY MAS VIDEOS PROMOCIONALES PARA ROTAR ===");
+            }
+        }
+    }
+
+    public void nextSong() {
+        long ahora = System.currentTimeMillis();
+        if (ahora - ultimaTransicionMs < 500) {
+            log("=== nextSong() IGNORADO (debounce) ===");
+            return;
+        }
+        ultimaTransicionMs = ahora;
+        advanceQueueNow();
+    }
+
+    private void advanceQueueNow() {
+        // Limpiar estado de videos promocionales
+        videosPromocionalesPendientes.clear();
+        videoPromocionalActual = null;
+
+        if (mPlayList.songToPlay() != null) {
+            mPlayList.removeSong();
+        }
+        if (savedSongs.length()>0) {
+            savedSongs.remove(0);
+            mUserSettings.writeSetting(true,new KeyPairValue(KEY_SAVED_SONGS,savedSongs));
+        }
+        playListInterface.setListData(mPlayList.getPlayList());
+
+        if (mPlayList.songToPlay() == null) {
+            entrarEnReposo();
+        } else {
+            procesarSiguienteEnCola();
+        }
+    }
+
+    // ==================================================================
+    // Créditos / premios
+    // ==================================================================
+    public void updateCreditsSettings() {
+        timerFullScreen.stop();
+        usedCredits = usedCredits + amountOfCredits;
+        insertedCredits++;
+        mUserSettings.writeSetting(false,new KeyPairValue(KEY_USED_CREDITS,usedCredits));
+        mUserSettings.writeSetting(false,new KeyPairValue(KEY_INSERTED_CREDITS,insertedCredits));
+        mUserSettings.writeSetting(true,new KeyPairValue(KEY_SAVED_CREDITS,creditManager.balance()));
+    }
+
+    public void playSound() {
+        try {
+            BufferedInputStream bis = new BufferedInputStream(getClass().getResourceAsStream("/com/mfrockola/sounds/felicitaciones.wav"));
+            AudioInputStream ais = AudioSystem.getAudioInputStream(bis);
+            if (promotionalSound != null) {
+                promotionalSound.stop();
+                promotionalSound.close();
+            }
+            promotionalSound = AudioSystem.getClip();
+            promotionalSound.open(ais);
+            promotionalSound.addLineListener(event -> {
+                if (event.getType() == javax.sound.sampled.LineEvent.Type.STOP
+                        && promotionalSound != null && !promotionalSound.isRunning()) {
+                    promotionalSound.close();
+                    promotionalSound = null;
+                }
+            });
+            promotionalSound.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void entregarPremiosYCreditosAdicionales() {
+        if (addAditionalCredit && !creditManager.isFreeMode() && everyAmountOfCredit > 0) {
+            insertedCreditsForAditionalCredits++;
+            if (insertedCreditsForAditionalCredits >= everyAmountOfCredit) {
+                insertedCreditsForAditionalCredits = 0;
+                creditManager.addCredits(numberAditionalCredits);
+                mUserSettings.writeSetting(true,new KeyPairValue(KEY_SAVED_CREDITS,creditManager.balance()));
+                labelCredits.setText(String.format("Creditos: %d", creditManager.balance()));
+                labelPromotions.setText(String.format("Ganaste %s creditos adicionales",
+                        numberAditionalCredits));
+                labelPromotions.setVisible(true);
+                requestFocusInWindow();
+            }
+        }
+
+        if (awardPrize && !creditManager.isFreeMode() && creditsForPrize > 0) {
             insertedCreditsForPrize++;
             mUserSettings.writeSetting(true,new KeyPairValue(KEY_INSERTED_CREDITS_FOR_PRIZE,insertedCreditsForPrize));
             if (insertedCreditsForPrize % creditsForPrize == 0) {
-                // Aqui va la cuestion para controlar el cartel de premio
                 labelPromotions.setText(String.format("Ganaste %s %s!", prizeAmount,typeOfPrize));
                 labelPromotions.setVisible(true);
+                requestFocusInWindow();
                 playSound();
             }
         }
     }
 
-    private class KeyboardManager extends KeyAdapter
+    // ==================================================================
+    // Log limpio
+    // ==================================================================
+    private static void log(String msg) {
+        System.out.println(msg);
+    }
+
+    // ==================================================================
+    // KeyboardManager
+    // ==================================================================
+    private class KeyboardManager implements KeyEventDispatcher
     {
         SQLiteConsultor consultor = new SQLiteConsultor();
 
-        public void keyPressed(KeyEvent evento)
+        @Override
+        public boolean dispatchKeyEvent(KeyEvent evento) {
+            if (evento.getID() != KeyEvent.KEY_PRESSED || !isDisplayable()) {
+                return false;
+            }
+
+            Window activeWindow = KeyboardFocusManager.getCurrentKeyboardFocusManager().getActiveWindow();
+            if (activeWindow != Interface.this) {
+                return false;
+            }
+
+            keyPressed(evento);
+            return false;
+        }
+
+        private void keyPressed(KeyEvent evento)
         {
-            // tecla bloque numerico = 144
             if (evento.getKeyCode()==KeyEvent.VK_NUM_LOCK) {
                 Toolkit.getDefaultToolkit().setLockingKeyState(KeyEvent.VK_NUM_LOCK,true);
             }
-            if (evento.getKeyCode()==keyFullScreen && (credits > 0 || !lockScreen))
+
+            if (evento.getKeyCode()==keyFullScreen && creditManager.canNavigate(lockScreen))
             {
                 if (labelPromotions.isVisible()) {
                     labelPromotions.setVisible(false);
@@ -685,55 +1001,50 @@ class Interface extends JFrame {
                 mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
             }
 
-            if ((evento.getKeyCode()==48 || evento.getKeyCode()==96) && (credits > 0 || !lockScreen))
+            if ((evento.getKeyCode()==48 || evento.getKeyCode()==96) && creditManager.canNavigate(lockScreen))
             {
                 mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
             }
-            else if ((evento.getKeyCode()==49 || evento.getKeyCode()==97) && (credits > 0 || !lockScreen))
+            else if ((evento.getKeyCode()==49 || evento.getKeyCode()==97) && creditManager.canNavigate(lockScreen))
             {
                 mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
             }
-            else if ((evento.getKeyCode()==50 || evento.getKeyCode()==98) && (credits > 0 || !lockScreen))
+            else if ((evento.getKeyCode()==50 || evento.getKeyCode()==98) && creditManager.canNavigate(lockScreen))
             {
                 mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
             }
-            else if ((evento.getKeyCode()==51 || evento.getKeyCode()==99) && (credits > 0 || !lockScreen))
+            else if ((evento.getKeyCode()==51 || evento.getKeyCode()==99) && creditManager.canNavigate(lockScreen))
             {
                 mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
             }
-            else if ((evento.getKeyCode()==52 || evento.getKeyCode()==100) && (credits > 0 || !lockScreen))
+            else if ((evento.getKeyCode()==52 || evento.getKeyCode()==100) && creditManager.canNavigate(lockScreen))
             {
                 mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
             }
-            else if ((evento.getKeyCode()==53 || evento.getKeyCode()==101) && (credits > 0 || !lockScreen))
+            else if ((evento.getKeyCode()==53 || evento.getKeyCode()==101) && creditManager.canNavigate(lockScreen))
             {
                 mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
             }
-            else if ((evento.getKeyCode()==54 || evento.getKeyCode()==102) && (credits > 0 || !lockScreen))
+            else if ((evento.getKeyCode()==54 || evento.getKeyCode()==102) && creditManager.canNavigate(lockScreen))
             {
                 mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
             }
-            else if ((evento.getKeyCode()==55 || evento.getKeyCode()==103) && (credits > 0 || !lockScreen))
+            else if ((evento.getKeyCode()==55 || evento.getKeyCode()==103) && creditManager.canNavigate(lockScreen))
             {
                 mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
             }
-            else if ((evento.getKeyCode()==56 || evento.getKeyCode()==104) && (credits > 0 || !lockScreen))
+            else if ((evento.getKeyCode()==56 || evento.getKeyCode()==104) && creditManager.canNavigate(lockScreen))
             {
                 mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
             }
-            else if ((evento.getKeyCode()==57 || evento.getKeyCode()==105) && (credits > 0 || !lockScreen))
+            else if ((evento.getKeyCode()==57 || evento.getKeyCode()==105) && creditManager.canNavigate(lockScreen))
             {
                 mSongSelector.labelSelector.setText(mSongSelector.keyEventHandler(evento));
             }
-            else if (evento.getKeyCode()==77) {
-                Thread ic = new Thread(new InternetConnection());
-//                addSongToPlayList(ic.start());
-            }
-
             if (mSongSelector.play)
             {
                 int numero;
-                boolean condicion = false;
+                boolean condicion;
 
                 numero = Integer.parseInt(String.format("%s%s%s%s%s", mSongSelector.values[0],mSongSelector.values[1],
                         mSongSelector.values[2],mSongSelector.values[3],mSongSelector.values[4]));
@@ -752,88 +1063,41 @@ class Interface extends JFrame {
                 }
                 else
                 {
-                    if ((credits > 0 && condicion)||(free && condicion))
+                    if (creditManager.canSelectSong() && condicion)
                     {
-                        if (mPlayList.songToPlay()==null)
-                        {
-                            if (timerRandomSong.isRunning()) {
-                                timerRandomSong.stop();
-                            }
+                        Song cancionAReproducir = listMusicData.getSong(numero);
 
-                            Song cancionAReproducir =  listMusicData.getSong(numero);
+                        encolarYArrancarSiProcede(cancionAReproducir);
 
-                            mPlayList.addSong(cancionAReproducir);
-
-                            int extension = Utils.getExtension(String.format("%s\\%s\\%s\\%s", pathSongs,mPlayList.getSongGender(),mPlayList.getSinger(), mPlayList.songToPlay()));
-
-                            if (extension == EXT_MP4 || extension == EXT_AVI || extension == EXT_MPG || extension == EXT_FLV || extension == EXT_MKV) {
-                                mMediaPlayer.playVideo(mPlayList.getSongGender(),mPlayList.getSinger(),mPlayList.songToPlay());
-                            } else if (extension == EXT_MP3 || extension == EXT_WMA || extension == EXT_WAV || extension == EXT_AAC) {
-                                mMediaPlayer.playAudio(
-                                        mPlayList.getSongGender(),
-                                        mPlayList.getSinger(),
-                                        mPlayList.songToPlay(),
-                                        pathVideosMP3 + "\\" + listMusicData.getPromVideo());
-                            }
-
-                            playListInterface.setListData(mPlayList.getPlayList());
-                            if (!free)
-                            {
-                                --credits;
-                                mUserSettings.writeSetting(true,new KeyPairValue(KEY_SAVED_CREDITS,credits));
-                                labelCredits.setText(String.format("%s: %d","Creditos",credits));
-                            }
-                            mSongSelector.play = false;
-                            mSongSelector.resetValues();
-                            mSongSelector.labelSelector.setText("- - - - -");
-                            mBlockedSongs.blockSong(numero);
-                            labelSongPlayingBottom.setText(String.format("%05d - %s - %s - %s",
-                                    mPlayList.getSongNumber(),
-                                    mPlayList.getSongGender(),
-                                    mPlayList.getSinger(),
-                                    mPlayList.songToPlay()));
-                            labelSongPlayingRight.setText(String.format("%05d - %s - %s - %s",
-                                    mPlayList.getSongNumber(),mPlayList.getSongGender(),
-                                    mPlayList.getSinger(), mPlayList.songToPlay()));
-                            if (credits == 0 && !free) {
-                                timerFullScreen.restart();
-                            }
-
-                            if (continuousCredits) {
-                                insertedCredits = 0;
-                            }
-
-                            updateDataBase(cancionAReproducir);
-                        }
-                        else
-                        {
-                            Song cancionAReproducir = listMusicData.getSong(numero);
-                            //Song cancion = new Song(numero, cancionAReproducir);
-                            mPlayList.addSong(cancionAReproducir);
+                        if (estadoActual == EstadoSistema.COLA
+                                && mPlayList.songToPlay() != null
+                                && !mPlayList.songToPlay().equals(cancionAReproducir.getSongName())) {
                             JSONObject jsonSong = mPlayList.getSongJSONObject(cancionAReproducir);
                             savedSongs.put(jsonSong);
                             mUserSettings.writeSetting(false,new KeyPairValue(KEY_SAVED_SONGS,savedSongs));
-                            playListInterface.setListData(mPlayList.getPlayList());
-                            if (!free) {
-                                --credits;
-                                mUserSettings.writeSetting(true,new KeyPairValue(KEY_SAVED_CREDITS,credits));
-                                labelCredits.setForeground(Color.WHITE);
-                                labelCredits.setText(String.format("%s: %d","Creditos",credits));
-                            }
-                            mSongSelector.play = false;
-                            mSongSelector.resetValues();
-                            mSongSelector.labelSelector.setText("- - - - -");
-                            mBlockedSongs.blockSong(numero);
-                            if (credits == 0 && !free) {
-                                timerFullScreen.restart();
-                            }
-
-                            if (continuousCredits) {
-                                insertedCredits = 0;
-                            }
-
-                            updateDataBase(cancionAReproducir);
                         }
+
+                        if (!creditManager.isFreeMode()) {
+                            creditManager.consumeForSong();
+                            mUserSettings.writeSetting(true,new KeyPairValue(KEY_SAVED_CREDITS,creditManager.balance()));
+                            labelCredits.setForeground(Color.WHITE);
+                            labelCredits.setText(String.format("%s: %d","Creditos",creditManager.balance()));
+                        }
+
+                        mSongSelector.play = false;
+                        mSongSelector.resetValues();
+                        mSongSelector.labelSelector.setText("- - - - -");
+                        mBlockedSongs.blockSong(numero);
+
+                        if (creditManager.balance() == 0 && !creditManager.isFreeMode()) {
+                            timerFullScreen.restart();
+                        }
+
+                        if (continuousCredits) {
+                            insertedCredits = 0;
+                        }
+
+                        updateDataBase(cancionAReproducir);
                     }
                     else
                     {
@@ -848,13 +1112,13 @@ class Interface extends JFrame {
             }
             else if (evento.getKeyCode()==122) {
                 String contrasenia = JOptionPane.showInputDialog("Introduzca la clave");
-                if (contrasenia.equals("12345")) {
-                    if (!free) {
-                        free = true;
+                if (contrasenia != null && contrasenia.equals("12345")) {
+                    if (!creditManager.isFreeMode()) {
+                        creditManager.setFreeMode(true);
                         labelCredits.setText("Creditos: Libres");
                     } else {
-                        free = false;
-                        labelCredits.setText(String.format("Creditos: %d", credits));
+                        creditManager.setFreeMode(false);
+                        labelCredits.setText(String.format("Creditos: %d", creditManager.balance()));
                     }
                 } else {
                     JOptionPane.showMessageDialog(null, "Contraseña Incorrecta","Error",JOptionPane.ERROR_MESSAGE);
@@ -862,7 +1126,7 @@ class Interface extends JFrame {
             } else if (evento.getKeyCode()==123) {
                 @SuppressWarnings("unused")
                 SettingsWindow config = new SettingsWindow();
-            } else if (evento.getKeyCode()==keyDownList && (credits > 0 || !lockScreen)) {
+            } else if (evento.getKeyCode()==keyDownList && creditManager.canNavigate(lockScreen)) {
                 if (isFullScreen) {
                     setFullScreen();
                 }
@@ -887,7 +1151,7 @@ class Interface extends JFrame {
                     mSongListInterface.setSelectedIndex(mSongListInterface.getSelectedIndex()-20);
                     mSongListInterface.ensureIndexIsVisible(mSongListInterface.getSelectedIndex());
                 }
-            } else if (evento.getKeyCode()==keyUpList && (credits > 0 || !lockScreen)) {
+            } else if (evento.getKeyCode()==keyUpList && creditManager.canNavigate(lockScreen)) {
                 if (isFullScreen) {
                     setFullScreen();
                 }
@@ -912,7 +1176,7 @@ class Interface extends JFrame {
                     mSongListInterface.setSelectedIndex(mSongListInterface.getSelectedIndex()+20);
                     mSongListInterface.ensureIndexIsVisible(mSongListInterface.getSelectedIndex());
                 }
-            } else if (evento.getKeyCode() == keyUpGenre && (credits > 0 || !lockScreen)) {
+            } else if (evento.getKeyCode() == keyUpGenre && creditManager.canNavigate(lockScreen)) {
                 if (isFullScreen) {
                     setFullScreen();
                 }
@@ -925,7 +1189,7 @@ class Interface extends JFrame {
                     mSongListInterface.ensureIndexIsVisible(0);
                     labelMusicalGenre.setText("Genero Musical: " + listMusicData.getNameOfGender());
                 }
-            } else if (evento.getKeyCode() == keyDownGenre && (credits > 0 || !lockScreen)) {
+            } else if (evento.getKeyCode() == keyDownGenre && creditManager.canNavigate(lockScreen)) {
                 if (isFullScreen) {
                     setFullScreen();
                 }
@@ -940,15 +1204,12 @@ class Interface extends JFrame {
                     labelMusicalGenre.setText("Genero Musical: " + listMusicData.getNameOfGender());
                 }
             } else if (evento.getKeyCode()==keyNextSong && mPlayList.songToPlay()!=null) {
-                if (mMediaPlayer.embeddedMediaPlayerMp3.isPlaying()) {
-                    mMediaPlayer.embeddedMediaPlayerMp3.stop();
-                } else {
-                    mMediaPlayer.embeddedMediaPlayer.stop();
-                }
+                mMediaPlayer.stopCurrent();
+                nextSong();
             }
             else if (evento.getKeyCode()==keyAddCredit) {
-                credits = credits + amountOfCredits;
-                labelCredits.setText(String.format("Creditos: %d", credits));
+                creditManager.addConfiguredCredits();
+                labelCredits.setText(String.format("Creditos: %d", creditManager.balance()));
                 updateCreditsSettings();
                 labelCredits.setForeground(Color.WHITE);
                 if (isFullScreen) {
@@ -956,240 +1217,66 @@ class Interface extends JFrame {
                 }
 
                 entregarPremiosYCreditosAdicionales();
-            } else if (evento.getKeyCode()==keyDeleteCredit && credits > 0) {
-                --credits;
-                mUserSettings.writeSetting(true,new KeyPairValue(KEY_SAVED_CREDITS,credits));
-                labelCredits.setText(String.format("Creditos: %d", credits));
-                if (credits == 0 && !free) {
+            } else if (evento.getKeyCode()==keyDeleteCredit && creditManager.removeOneCredit()) {
+                mUserSettings.writeSetting(true,new KeyPairValue(KEY_SAVED_CREDITS,creditManager.balance()));
+                labelCredits.setText(String.format("Creditos: %d", creditManager.balance()));
+                if (creditManager.balance() == 0 && !creditManager.isFreeMode()) {
                     timerFullScreen.restart();
                 }
             }
         }
 
-        private void updateDataBase(Song cancionAReproducir) {
-            try {
-                String consulta = "SELECT * FROM most_popular WHERE number = " + cancionAReproducir.getSongNumber();
+            private void updateDataBase(Song cancionAReproducir) {
+                try {
+                    String consulta = "SELECT * FROM most_popular WHERE number = " + cancionAReproducir.getSongNumber();
+                    ResultSet resultSet = consultor.query(consulta);
 
-                ResultSet resultSet = consultor.query(consulta);
-
-                if (resultSet.isClosed()) {
-                    resultSet.close();
-
-                    String insertar = "INSERT INTO most_popular(number, name, artist, genre, times, last_date)" +
-                            " VALUES ("+cancionAReproducir.getSongNumber()+",'" +
-                            cancionAReproducir.getSongName()+ "','" +
-                            cancionAReproducir.getSinger() + "','" +
-                            cancionAReproducir.getSongGenre() + "'," +
-                            1 + ", "+ new Date().getTime() +");";
-
-                    consultor.insert(insertar);
-                } else {
-
-                    int times = 0;
-                    while (resultSet.next()) {
-                        times = resultSet.getInt("times") + 1;
+                    if (resultSet == null) {
+                        return;
                     }
 
-                    resultSet.close();
-
-                    consultor.update("UPDATE most_popular SET times = " + times + ", last_date = " + new Date().getTime() + " WHERE number = " + cancionAReproducir.getSongNumber());
-
-                    consultor.closeConnection();
-                }
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
-        }
-    }
-
-    private class MediaPlayerManager extends MediaPlayerEventAdapter
-    {
-        @Override
-        public void stopped(uk.co.caprica.vlcj.player.MediaPlayer mediaPlayer) {
-            if (mPlayList.songToPlay()!=null) {
-                nextSong();
-            }
-        }
-
-        public void finished(uk.co.caprica.vlcj.player.MediaPlayer mediaPlayer) {
-            if (mMediaPlayer.embeddedMediaPlayerMp3.isPlaying()) {
-                String path = pathVideosMP3 + "\\" + listMusicData.getPromVideo();
-                File file = new File(path);
-                mMediaPlayer.playVideo(file.getAbsolutePath());
-            } else {
-                nextSong();
-            }
-        }
-
-        public void nextSong() {
-            mPlayList.removeSong();
-            if (savedSongs.length()>0) {
-                savedSongs.remove(0);
-                mUserSettings.writeSetting(true,new KeyPairValue(KEY_SAVED_SONGS,savedSongs));
-            }
-            playListInterface.setListData(mPlayList.getPlayList());
-
-            if (mPlayList.songToPlay() == null) {
-                if (randomSong == 0) {
-                    playRandomSong();
-                } else {
-                    timerRandomSong.start();
-                }
-                labelSongPlayingBottom.setText("MFRockola");
-                labelSongPlayingRight.setText("Su selección musical");
-            } else {
-                int extension = Utils.getExtension(String.format("%s\\%s\\%s\\%s", pathSongs,mPlayList.getSongGender(),mPlayList.getSinger(), mPlayList.songToPlay()));
-
-                if (extension == EXT_MP4 || extension == EXT_AVI || extension == EXT_MPG || extension == EXT_FLV || extension == EXT_MKV) {
-                    mMediaPlayer.playVideo(
-                            mPlayList.getSongGender(),
-                            mPlayList.getSinger(),
-                            mPlayList.songToPlay());
-
-                } else if (extension == EXT_MP3 || extension == EXT_WMA || extension == EXT_WAV || extension == EXT_AAC) {
-                    mMediaPlayer.playAudio(
-                            mPlayList.getSongGender(),
-                            mPlayList.getSinger(),
-                            mPlayList.songToPlay(),
-                            pathVideosMP3 + "\\" + listMusicData.getPromVideo());
-                }
-
-                labelSongPlayingBottom.setText(String.format("%05d - %s - %s - %s",
-                        mPlayList.getSongNumber(),
-                        mPlayList.getSongGender(),
-                        mPlayList.getSinger(),
-                        mPlayList.songToPlay()));
-
-                labelSongPlayingRight.setText(String.format("%05d - %s - %s - %s",
-                        mPlayList.getSongNumber(),
-                        mPlayList.getSongGender(),
-                        mPlayList.getSinger(),
-                        mPlayList.songToPlay()));
-            }
-        }
-    }
-
-    public void updateCreditsSettings() {
-        timerFullScreen.stop();
-        usedCredits = usedCredits + amountOfCredits;
-        insertedCredits++;
-        mUserSettings.writeSetting(false,new KeyPairValue(KEY_USED_CREDITS,usedCredits));
-        mUserSettings.writeSetting(false,new KeyPairValue(KEY_INSERTED_CREDITS,insertedCredits));
-        mUserSettings.writeSetting(true,new KeyPairValue(KEY_SAVED_CREDITS,credits));
-    }
-
-    public void playSound() {
-        try {
-            BufferedInputStream bis = new BufferedInputStream(getClass().getResourceAsStream("/com/mfrockola/sounds/felicitaciones.wav"));
-            AudioInputStream ais = AudioSystem.getAudioInputStream(bis);
-            promotionalSound = AudioSystem.getClip();
-            promotionalSound.open(ais);
-            promotionalSound.start();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void playRandomSong(){
-        Random random = new Random();
-        if (randomSong == 0) {
-            File file = new File(pathSongs + "\\Promocionales\\Promocionales");
-            if (file.isDirectory()) {
-                String [] list = file.list();
-                if (list.length == 0) return;
-                random = new Random();
-                int rand = random.nextInt(list.length);
-                String song = list[rand];
-                mPlayList.addSong(new Song(0,"Promocionales", "Promocionales", song));
-
-                int extension = Utils.getExtension(song);
-
-                if (extension == EXT_MP4 || extension == EXT_AVI || extension == EXT_MPG || extension == EXT_FLV || extension == EXT_MKV) {
-                    mMediaPlayer.playVideo("Promocionales", "Promocionales",mPlayList.songToPlay());
-                } else if (extension == EXT_MP3 || extension == EXT_WMA || extension == EXT_WAV || extension == EXT_AAC) {
-                    String promVideo = listMusicData.getPromVideo();
-                    System.out.println(promVideo);
-                    mMediaPlayer.playAudio(
-                            mPlayList.getSongGender(),
-                            mPlayList.getSinger(),
-                            mPlayList.songToPlay(),
-                            pathVideosMP3 + "\\" + promVideo);
-                }
-
-                playListInterface.setListData(mPlayList.getPlayList());
-                labelSongPlayingBottom.setText(String.format("%05d - %s - %s - %s",
-                        mPlayList.getSongNumber(),
-                        mPlayList.getSongGender(),
-                        mPlayList.getSinger(),
-                        mPlayList.songToPlay()));
-                labelSongPlayingRight.setText(String.format("%05d - %s - %s - %s",
-                        mPlayList.getSongNumber(),mPlayList.getSongGender(),
-                        mPlayList.getSinger(), mPlayList.songToPlay()));
-                return;
-            }
-        }
-
-        mPlayList.addSong(listMusicData.getSong(random.nextInt(listMusicData.getSizeListOfSongs())));
-
-        int extension = Utils.getExtension(String.format("%s\\%s\\%s\\%s", pathSongs,mPlayList.getSongGender(),mPlayList.getSinger(), mPlayList.songToPlay()));
-
-        if (extension == EXT_MP4 || extension == EXT_AVI || extension == EXT_MPG || extension == EXT_FLV || extension == EXT_MKV) {
-            mMediaPlayer.playVideo(mPlayList.getSongGender(),mPlayList.getSinger(),mPlayList.songToPlay());
-        } else if (extension == EXT_MP3 || extension == EXT_WMA || extension == EXT_WAV || extension == EXT_AAC) {
-            mMediaPlayer.playAudio(
-                    mPlayList.getSongGender(),
-                    mPlayList.getSinger(),
-                    mPlayList.songToPlay(),
-                    pathVideosMP3 + "\\" + listMusicData.getPromVideo());
-        }
-
-        playListInterface.setListData(mPlayList.getPlayList());
-
-        labelSongPlayingBottom.setText(String.format("%05d - %s - %s - %s",
-                mPlayList.getSongNumber(),
-                mPlayList.getSongGender(),
-                mPlayList.getSinger(),
-                mPlayList.songToPlay()));
-        labelSongPlayingRight.setText(String.format("%05d - %s - %s - %s",
-                mPlayList.getSongNumber(),mPlayList.getSongGender(),
-                mPlayList.getSinger(), mPlayList.songToPlay()));
-
-        /*Random random = new Random();
-        File path = new File(pathSongs);
-        if (path.exists()) {
-            File [] genres = path.listFiles();
-            File selectedGenre = genres[random.nextInt(genres.length)];
-            if (selectedGenre.exists()) {
-                File [] singers = selectedGenre.listFiles();
-                File selectedSinger = singers[random.nextInt(singers.length)];
-                if (selectedSinger.exists()) {
-                    File [] songs = selectedSinger.listFiles();
-
-                    String randomSong = songs[random.nextInt(songs.length)].getAbsolutePath();
-
-                    int extension = Utils.getExtension(randomSong);
-
-                    if (extension == EXT_MP4 || extension == EXT_AVI || extension == EXT_MPG || extension == EXT_FLV || extension == EXT_MKV) {
-                        mMediaPlayer.playVideo(randomSong);
-                    } else if (extension == EXT_MP3 || extension == EXT_WMA || extension == EXT_WAV || extension == EXT_AAC) {
-                        mMediaPlayer.playAudio(
-                                randomSong,
-                                (String) mUserSettings.getSetting(KEY_PATH_VIDEOS_MP3) + "\\" + listMusicData.getPromVideo());
+                    if (!resultSet.next()) {
+                        // No existe → INSERT
+                        resultSet.close();
+                        String insertar = "INSERT INTO most_popular(number, name, artist, genre, times, last_date)" +
+                                " VALUES (" + cancionAReproducir.getSongNumber() + ",'" +
+                                cancionAReproducir.getSongName() + "','" +
+                                cancionAReproducir.getSinger() + "','" +
+                                cancionAReproducir.getSongGenre() + "'," +
+                                1 + ", " + new Date().getTime() + ");";
+                        consultor.insert(insertar);
+                    } else {
+                        // Existe → UPDATE
+                        int times = resultSet.getInt("times") + 1;
+                        resultSet.close();
+                        consultor.update("UPDATE most_popular SET times = " + times +
+                                ", last_date = " + new Date().getTime() +
+                                " WHERE number = " + cancionAReproducir.getSongNumber());
                     }
-                }
-            }
-        }*/
+    //    consultor.closeConnection();
+    } catch (SQLException ex) {
+        ex.printStackTrace();
+    }
+}
     }
 
+    // ==================================================================
+    // Compatibilidad
+    // ==================================================================
     public void addSongToPlayList(ArrayList numbers) {
         if (numbers.size()>0) {
             for (int i = 0; i < numbers.size(); i++) {
                 Song cancionAReproducir = listMusicData.getSong((int) numbers.get(i));
-                //Song cancion = new Song(numero, cancionAReproducir);
                 mPlayList.addSong(cancionAReproducir);
-
             }
         }
         playListInterface.setListData(mPlayList.getPlayList());
+
+        if (estadoActual == EstadoSistema.REPOSO && mPlayList.songToPlay() != null) {
+            timerRandomSong.stop();
+            detenerReproductores();
+            estadoActual = EstadoSistema.COLA;
+            procesarSiguienteEnCola();
+        }
     }
 }

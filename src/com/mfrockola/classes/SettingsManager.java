@@ -100,7 +100,7 @@ public class SettingsManager {
 
         try {
 
-            File file = new File(new File("").getAbsolutePath()+"\\config.json");
+            File file = new File(new File("").getAbsolutePath(), "config.json");
 
             if (!file.exists()) {
                 writeDefaultSettings();
@@ -163,7 +163,7 @@ public class SettingsManager {
 
     private void updateSettingsFile(){
         try {
-            FileWriter file = new FileWriter(new File("").getAbsolutePath()+"\\config.json");
+            FileWriter file = new FileWriter(new File(new File("").getAbsolutePath(), "config.json"));
             settings.write(file);
             file.flush();
             file.close();
@@ -174,7 +174,7 @@ public class SettingsManager {
 
 
     void writeDefaultSettings(){
-        ArrayList newSettings = new ArrayList();
+        ArrayList<KeyPairValue> newSettings = new ArrayList<>();
 
         // Panel TIME
         newSettings.add(new KeyPairValue(KEY_RANDOM_SONG, 1));
@@ -188,9 +188,9 @@ public class SettingsManager {
         newSettings.add(new KeyPairValue(KEY_FONT_SELECTOR_SIZE,50));
 
         // Panel PATHS
-        newSettings.add(new KeyPairValue(KEY_PATH_SONGS,"c:\\videos"));
-        newSettings.add(new KeyPairValue(KEY_PATH_VIDEOS_MP3,"C:\\MFRockola\\Videos para MP3"));
-        newSettings.add(new KeyPairValue(KEY_PATH_VLC,"C:\\Program Files\\VideoLAN\\VLC"));
+        newSettings.add(new KeyPairValue(KEY_PATH_SONGS,new File(new File("").getAbsolutePath(), "videos").getPath()));
+        newSettings.add(new KeyPairValue(KEY_PATH_VIDEOS_MP3,new File(new File("").getAbsolutePath(), "Videos para MP3").getPath()));
+        newSettings.add(new KeyPairValue(KEY_PATH_VLC,"/usr/lib64"));
 
         // Panel KEYBOARD AND MOUSE
         newSettings.add(new KeyPairValue(KEY_UP_LIST,106));
@@ -242,7 +242,7 @@ public class SettingsManager {
             settings = new JSONObject(settingsNew);
             KeyPairValue keyPairValue;
             for (int i = 0; i < newSettings.size(); i++){
-                keyPairValue = (KeyPairValue) newSettings.get(i);
+                keyPairValue = newSettings.get(i);
                 settings.put(keyPairValue.key,keyPairValue.value);
             }
 

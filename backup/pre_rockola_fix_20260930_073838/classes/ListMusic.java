@@ -1,0 +1,199 @@
+package com.mfrockola.classes;
+
+import java.io.File;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Random;
+
+/**
+ * Created by Angel C on 03/05/2016.
+ */
+public class ListMusic {
+
+    private ArrayList <Song> listOfSongs;
+    private ArrayList<Gender> gender;
+    private String path;
+    private String pathPromVideos;
+    private int selectedGender;
+    private int songNumber;
+
+    private String [] promVideos;
+
+    private Random random;
+
+    public ListMusic (String path, String pathPromVideos) {
+        setPath(path);
+        setPathPromVideos(pathPromVideos);
+        setGender(new ArrayList<>());
+        setListOfSongs(new ArrayList<>());
+
+        selectedGender = 0;
+        countGender();
+
+        random = new Random();
+    }
+
+    public int getSelectedGender (){
+        return selectedGender;
+    }
+
+    public void setListOfSongs(ArrayList<Song> listOfSongs) {
+        this.listOfSongs = listOfSongs;
+    }
+
+    public int getSizeListOfSongs () {
+        return listOfSongs.size();
+    }
+
+    public Song getSong(int number) {
+        return listOfSongs.get(number);
+    }
+
+    public void countGender() {
+        String [] listaArchivos = null;
+
+        File directorio = new File(path);
+
+        if (directorio.isDirectory())
+            listaArchivos = directorio.list();
+
+        for (int i = 0; i< listaArchivos.length; i++) {
+            File archivoActual = new File(path, listaArchivos[i]);
+
+            if (archivoActual.isDirectory()) {
+                gender.add(new Gender(listaArchivos[i],countSongs(archivoActual)));
+            }
+        }
+
+        gender.add(getGenderTop30());
+
+        File directorioVideosPromocionales = new File(getPathPromVideos());
+
+        if (directorioVideosPromocionales.isDirectory()) {
+            promVideos = directorioVideosPromocionales.list(new java.io.FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    String lowerName = name.toLowerCase();
+
+                    return lowerName.endsWith(".mp4")
+                            || lowerName.endsWith(".mpg")
+                            || lowerName.endsWith(".mpeg");
+                }
+            });
+        }
+    }
+
+    public boolean upGender() {
+        if (selectedGender + 1 < gender.size()) {
+            selectedGender++;
+            return true;
+        } else {
+            selectedGender = 0;
+            return true;
+        }
+    }
+
+    public boolean downGender() {
+        if (selectedGender != 0) {
+            selectedGender--;
+            return true;
+        } else {
+            selectedGender = gender.size()-1;
+            return true;
+        }
+    }
+
+    public String getNameOfGender() {
+        return gender.get(selectedGender).getName();
+    }
+
+    public Song[] countSongs(File file) {
+
+        String [] artistas = file.list();
+
+        ArrayList<Song> provisionalGender = new ArrayList<>();
+
+        Song[] gender = new Song[0];
+
+        for (int i = 0; i < artistas.length; i++) {
+
+            File artista = new File(path, file.getName() + File.separator + artistas[i]);
+
+            if (artista.isDirectory()) {
+                String [] canciones = artista.list();
+
+                for (int j = 0; j < canciones.length; j++) {
+                    File cancion = new File(artista, canciones[j]);
+                    if (Utils.getExtension(cancion.getPath()) != Utils.EXT_UNKNOWN) {
+                        provisionalGender.add(new Song(songNumber,file.getName(),artista.getName(),canciones[j]));
+                        listOfSongs.add(new Song(songNumber,file.getName(),artista.getName(),canciones[j]));
+                        songNumber++;
+                    }
+                }
+            }
+
+            gender = new Song[provisionalGender.size()];
+
+            for (int k = 0; k < provisionalGender.size(); k++) {
+                gender[k] = provisionalGender.get(k);
+            }
+        }
+        return gender;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public void setGender(ArrayList<Gender> gender) {
+        this.gender = gender;
+    }
+
+    public Song[] getGenderSongs(int i) {
+        return gender.get(i).getSongs();
+    }
+
+    public String getPromVideo() {
+        if (promVideos == null || promVideos.length == 0) {
+            return null;
+        }
+
+        return promVideos[random.nextInt(promVideos.length)];
+    }
+
+    public String getPathPromVideos() {
+        return pathPromVideos;
+    }
+
+    public void setPathPromVideos(String pathPromVideos) {
+        this.pathPromVideos = pathPromVideos;
+    }
+
+    private Gender getGenderTop30() {
+        Song[] songs = new Song[30];
+        Gender genderTop30 = null;
+        SQLiteConsultor sqLiteConsultor = new SQLiteConsultor();
+
+        try {
+            ResultSet resultSet = sqLiteConsultor.query("SELECT * FROM most_popular ORDER BY times DESC, number ASC");
+            int i = 0;
+            while (resultSet.next() && i < 30) {
+                songs[i] = new Song(resultSet.getInt("number"),
+                        resultSet.getString("genre"),
+                        resultSet.getString("artist"),
+                        resultSet.getString("name"));
+                i++;
+            }
+
+            genderTop30 = new Gender("Top 30",songs);
+
+            resultSet.close();
+            sqLiteConsultor.closeConnection();
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return genderTop30;
+    }
+}

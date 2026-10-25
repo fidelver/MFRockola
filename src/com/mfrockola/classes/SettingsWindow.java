@@ -163,8 +163,7 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 			{
 				updateSettings();
 				JOptionPane.showMessageDialog(null,"Configuración guardada correctamente");
-				new Thread(new Splash()).start();
-				Splash.moveMouse = true;
+				new Splash();
 				dispose();
 			}
 		});
@@ -191,12 +190,12 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		textPane.setText("Este es el panel de configuración de los tiempos internos de MFRockola. Por ejemplo, el tiempo que debe pasar para reproducir una canción aleatoria y el tiempo necesario para poner la pantalla completa.");
 		textPane.setEditable(false);
 		textPane.setFocusable(false);
-		textPane.setBounds(220, 50, 367, 48);
+		textPane.setBounds(220, 50, 367, 76);
 		panel2.add(textPane);
 
 		JTextPane txtpnTiempoNecesarioPara = new JTextPane();
 		txtpnTiempoNecesarioPara.setText("Tiempo necesario para reproducir una canción de cortesía aleatoria (Minutos)");
-		txtpnTiempoNecesarioPara.setBounds(220, 107, 225, 48);
+		txtpnTiempoNecesarioPara.setBounds(220, 135, 225, 63);
 		txtpnTiempoNecesarioPara.setFocusable(false);
 		txtpnTiempoNecesarioPara.setEditable(false);
 		panel2.add(txtpnTiempoNecesarioPara);
@@ -205,21 +204,21 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		textFieldMusicaAleatoria.setHorizontalAlignment(SwingConstants.CENTER);
 		textFieldMusicaAleatoria.setFont(new Font("Calibri", Font.PLAIN, 13));
 		textFieldMusicaAleatoria.setColumns(10);
-		textFieldMusicaAleatoria.setBounds(455, 111, 86, 31);
+		textFieldMusicaAleatoria.setBounds(455, 139, 86, 31);
 		panel2.add(textFieldMusicaAleatoria);
 
 		JTextPane txtpnTiempoNecesarioPara_1 = new JTextPane();
 		txtpnTiempoNecesarioPara_1.setText("Límite de tiempo para poder repetir una misma canción");
 		txtpnTiempoNecesarioPara_1.setFocusable(false);
 		txtpnTiempoNecesarioPara_1.setEditable(false);
-		txtpnTiempoNecesarioPara_1.setBounds(220, 163, 225, 63);
+		txtpnTiempoNecesarioPara_1.setBounds(220, 218, 225, 48);
 		panel2.add(txtpnTiempoNecesarioPara_1);
 
 		textFieldReinicioMusicas = new JTextField();
 		textFieldReinicioMusicas.setHorizontalAlignment(SwingConstants.CENTER);
 		textFieldReinicioMusicas.setFont(new Font("Calibri", Font.PLAIN, 13));
 		textFieldReinicioMusicas.setColumns(10);
-		textFieldReinicioMusicas.setBounds(455, 171, 86, 31);
+		textFieldReinicioMusicas.setBounds(455, 226, 86, 31);
 		panel2.add(textFieldReinicioMusicas);
 
 		JPanel panel3 = new JPanel();
@@ -305,7 +304,7 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 
 		String [] tamanios = {"8","9","10","11","12","13","14","16","18","20","24","28","36","48","50","55","60","65","70","72"};
 
-		comboBoxTamanioDeFuenteSelector = new JComboBox(tamanios);
+		comboBoxTamanioDeFuenteSelector = new JComboBox<>(tamanios);
 		comboBoxTamanioDeFuenteSelector.setBounds(498,216,43,23);
 		panel3.add(comboBoxTamanioDeFuenteSelector);
 
@@ -336,7 +335,7 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 			}
 		});
 
-		buttonPathVideos.setBounds(563, 127, 32, 23);
+		buttonPathVideos.setBounds(563, 141, 32, 23);
 		panel4.add(buttonPathVideos);
 
 
@@ -347,7 +346,7 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 				textFieldVideosParaMp3.setText(seleccionarDirectorio());
 			}
 		});
-		buttonPathVideosParaMp3.setBounds(563, 161, 32, 23);
+		buttonPathVideosParaMp3.setBounds(563, 175, 32, 23);
 		panel4.add(buttonPathVideosParaMp3);
 
 		JButton buttonPathVLC = new JButton("...");
@@ -357,17 +356,17 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 				textFieldVlc.setText(seleccionarDirectorio());
 			}
 		});
-		buttonPathVLC.setBounds(563, 195, 32, 23);
+		buttonPathVLC.setBounds(563, 209, 32, 23);
 		panel4.add(buttonPathVLC);
 
 		buttonRenameFiles = new JButton("Renombrar archivos del directorio musical");
 
-		buttonRenameFiles.setBounds(345,227,250,23);
+		buttonRenameFiles.setBounds(345,241,250,23);
 		panel4.add(buttonRenameFiles);
 
 		renameFilesProgressBar = new JProgressBar();
 		renameFilesProgressBar.setIndeterminate(true);
-		renameFilesProgressBar.setBounds(345,227,250,23);
+		renameFilesProgressBar.setBounds(345,241,250,23);
 		renameFilesProgressBar.setVisible(false);
 		panel4.add(renameFilesProgressBar);
 
@@ -384,33 +383,33 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		textFieldVideos = new JTextField();
 		textFieldVideos.setText("");
 		textFieldVideos.setColumns(10);
-		textFieldVideos.setBounds(328, 128, 225, 20);
+		textFieldVideos.setBounds(328, 142, 225, 20);
 		panel4.add(textFieldVideos);
 
 		textFieldVideosParaMp3 = new JTextField();
 		textFieldVideosParaMp3.setText("");
 		textFieldVideosParaMp3.setColumns(10);
-		textFieldVideosParaMp3.setBounds(328, 162, 225, 20);
+		textFieldVideosParaMp3.setBounds(328, 176, 225, 20);
 		panel4.add(textFieldVideosParaMp3);
 
 		textFieldVlc = new JTextField();
 		textFieldVlc.setColumns(10);
-		textFieldVlc.setBounds(328, 196, 225, 20);
+		textFieldVlc.setBounds(328, 210, 225, 20);
 		panel4.add(textFieldVlc);
 
 		JLabel lblVideos = new JLabel("Directorio de Música y Videos");
 		lblVideos.setHorizontalAlignment(SwingConstants.RIGHT);
-		lblVideos.setBounds(167, 131, 151, 14);
+		lblVideos.setBounds(167, 145, 151, 14);
 		panel4.add(lblVideos);
 
 		JLabel lblVideosParaMp3 = new JLabel("Directorio de Videos para MP3");
 		lblVideosParaMp3.setHorizontalAlignment(SwingConstants.RIGHT);
-		lblVideosParaMp3.setBounds(157, 165, 161, 14);
+		lblVideosParaMp3.setBounds(157, 179, 161, 14);
 		panel4.add(lblVideosParaMp3);
 
 		JLabel lblVlc = new JLabel("Directorio del VLC");
 		lblVlc.setHorizontalAlignment(SwingConstants.RIGHT);
-		lblVlc.setBounds(217, 199, 101, 14);
+		lblVlc.setBounds(217, 213, 101, 14);
 		panel4.add(lblVlc);
 
 		Icon carpeta = new ImageIcon(this.getClass().getResource("/com/mfrockola/imagenes/carpeta.png"));
@@ -427,7 +426,7 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		txtpnEsteEsEl.setText("Este es el panel de configuración de los directorios para un buen funcionamiento de MFRockola. Es importante tener en cuenta que debe manejar esta configuración con cuidado porque puede provocar que el programa se vuelva inestable.");
 		txtpnEsteEsEl.setEditable(false);
 		txtpnEsteEsEl.setFocusable(false);
-		txtpnEsteEsEl.setBounds(220, 50, 367, 62);
+		txtpnEsteEsEl.setBounds(220, 50, 367, 76);
 		panel4.add(txtpnEsteEsEl);
 
 		txtpnNotaAcentos = new JTextPane();
@@ -435,7 +434,7 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		txtpnNotaAcentos.setText("NOTA: los nombres de las canciones que tienen letra Ñ o tildes, deben ser renombrados, retirando las tildes y cambiando la Ñ por la N. así el programa trabajará adecuadamente.");
 		txtpnNotaAcentos.setEditable(false);
 		txtpnNotaAcentos.setFocusable(false);
-		txtpnNotaAcentos.setBounds(10, 250, 595, 62);
+		txtpnNotaAcentos.setBounds(10, 275, 595, 62);
 		panel4.add(txtpnNotaAcentos);
 
 		JTextPane txtpnAdvertenciaTengaCuidado = new JTextPane();
@@ -443,7 +442,7 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		txtpnAdvertenciaTengaCuidado.setText("Advertencia: Tenga cuidado al modificar el directorio del VLC. Consulte la documentación antes de realizar modificaciones");
 		txtpnAdvertenciaTengaCuidado.setEditable(false);
 		txtpnAdvertenciaTengaCuidado.setFocusable(false);
-		txtpnAdvertenciaTengaCuidado.setBounds(10, 340, 585, 23);
+		txtpnAdvertenciaTengaCuidado.setBounds(10, 365, 585, 23);
 		panel4.add(txtpnAdvertenciaTengaCuidado);
 
 		Icon teclas = new ImageIcon(this.getClass().getResource("/com/mfrockola/imagenes/teclas.png"));
@@ -465,107 +464,107 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		txtpnEsteEsEl_1.setText("Este es el panel para configurar el teclado y el mouse. Si la configuración por defecto no le conviene puede cambiarla por cualquier tecla. Por comodidad del usuario, el bloque numérico siempre estará activado cuando inicie MFRockola.");
 		txtpnEsteEsEl_1.setEditable(false);
 		txtpnEsteEsEl_1.setFocusable(false);
-		txtpnEsteEsEl_1.setBounds(220, 50, 367, 62);
+		txtpnEsteEsEl_1.setBounds(220, 50, 367, 105);
 		panel5.add(txtpnEsteEsEl_1);
 
 		JLabel lblSubirbajrLista = new JLabel("Subir/Bajr Lista");
 		lblSubirbajrLista.setHorizontalAlignment(SwingConstants.RIGHT);
-		lblSubirbajrLista.setBounds(262, 119, 103, 14);
+		lblSubirbajrLista.setBounds(262, 167, 103, 14);
 		panel5.add(lblSubirbajrLista);
 
 		textFieldSubirL = new TextFieldKey(this,(int)mSettingsManager.getSetting(KEY_UP_LIST));
-		textFieldSubirL.setBounds(375, 119, 50, 20);
+		textFieldSubirL.setBounds(375, 167, 50, 20);
 		panel5.add(textFieldSubirL);
 
 		JLabel label_2 = new JLabel("/");
-		label_2.setBounds(435, 119, 4, 14);
+		label_2.setBounds(435, 167, 4, 14);
 		panel5.add(label_2);
 
 		textFieldBajarL = new TextFieldKey(this,(int)mSettingsManager.getSetting(KEY_DOWN_LIST));
-		textFieldBajarL.setBounds(451, 119, 50, 20);
+		textFieldBajarL.setBounds(451, 167, 50, 20);
 		panel5.add(textFieldBajarL);
 
 		JLabel lblSubirBajarGenero = new JLabel("Subir/Bajr Genero");
 		lblSubirBajarGenero.setHorizontalAlignment(SwingConstants.RIGHT);
-		lblSubirBajarGenero.setBounds(262, 144, 103, 14);
+		lblSubirBajarGenero.setBounds(262, 192, 103, 14);
 		panel5.add(lblSubirBajarGenero);
 
 		textFieldSubirGenero = new TextFieldKey(this,(int)mSettingsManager.getSetting(KEY_UP_GENRE));
-		textFieldSubirGenero.setBounds(375, 144, 50, 20);
+		textFieldSubirGenero.setBounds(375, 192, 50, 20);
 		panel5.add(textFieldSubirGenero);
 
 		JLabel label_4 = new JLabel("/");
-		label_4.setBounds(435, 144, 4, 14);
+		label_4.setBounds(435, 192, 4, 14);
 		panel5.add(label_4);
 
 		textFieldBajarGenero = new TextFieldKey(this,(int)mSettingsManager.getSetting(KEY_DOWN_GENRE));
-		textFieldBajarGenero.setBounds(451, 144, 50, 20);
+		textFieldBajarGenero.setBounds(451, 192, 50, 20);
 		panel5.add(textFieldBajarGenero);
 
 		JLabel lblPantallaCompleta = new JLabel("Pantalla Completa");
 		lblPantallaCompleta.setHorizontalAlignment(SwingConstants.RIGHT);
-		lblPantallaCompleta.setBounds(262, 169, 103, 14);
+		lblPantallaCompleta.setBounds(262, 217, 103, 14);
 		panel5.add(lblPantallaCompleta);
 
 		textFieldPantallaCompleta = new TextFieldKey(this,(int)mSettingsManager.getSetting(KEY_FULL_SCREEN));
-		textFieldPantallaCompleta.setBounds(375, 169, 50, 20);
+		textFieldPantallaCompleta.setBounds(375, 217, 50, 20);
 		panel5.add(textFieldPantallaCompleta);
 
 		JLabel lblBorrar = new JLabel("Borrar");
 		lblBorrar.setHorizontalAlignment(SwingConstants.RIGHT);
-		lblBorrar.setBounds(262, 194, 103, 14);
+		lblBorrar.setBounds(262, 242, 103, 14);
 		panel5.add(lblBorrar);
 
 		textFieldBorrar = new TextFieldKey(this,(int)mSettingsManager.getSetting(KEY_DELETE_NUMBER));
 		textFieldBorrar.setColumns(10);
-		textFieldBorrar.setBounds(375, 194, 50, 20);
+		textFieldBorrar.setBounds(375, 242, 50, 20);
 		panel5.add(textFieldBorrar);
 
 		JLabel labelSaltarCancion = new JLabel("Tecla para saltar canción");
-		labelSaltarCancion.setBounds(167,219,200,23);
+		labelSaltarCancion.setBounds(167,267,200,23);
 		labelSaltarCancion.setHorizontalAlignment(SwingConstants.RIGHT);
 		panel5.add(labelSaltarCancion);
 
 		textFieldSaltarCancion = new TextFieldKey(this,(int)mSettingsManager.getSetting(KEY_NEXT_SONG)); // tecla 83 S
-		textFieldSaltarCancion.setBounds(375, 219, 50, 20);
+		textFieldSaltarCancion.setBounds(375, 267, 50, 20);
 		textFieldSaltarCancion.setColumns(10);
 		panel5.add(textFieldSaltarCancion);
 
 		JLabel labelTeclaAgregarCredito = new JLabel("Tecla para agregar credito");
-		labelTeclaAgregarCredito.setBounds(167,244,200,23);
+		labelTeclaAgregarCredito.setBounds(167,292,200,23);
 		labelTeclaAgregarCredito.setHorizontalAlignment(SwingConstants.RIGHT);
 		panel5.add(labelTeclaAgregarCredito);
 
 		textFieldAgregarCreditos = new TextFieldKey(this,(int)mSettingsManager.getSetting(KEY_ADD_CREDIT)); // tecla 65 A
 		textFieldAgregarCreditos.setColumns(10);
-		textFieldAgregarCreditos.setBounds(375, 244, 50, 20);
+		textFieldAgregarCreditos.setBounds(375, 292, 50, 20);
 		panel5.add(textFieldAgregarCreditos);
 
 		JLabel labelTeclaParaBorrarCredito = new JLabel("Tecla para borrar credito"); // tecla 66 S
-		labelTeclaParaBorrarCredito.setBounds(167,269,200,23);
+		labelTeclaParaBorrarCredito.setBounds(167,317,200,23);
 		labelTeclaParaBorrarCredito.setHorizontalAlignment(SwingConstants.RIGHT);
 		panel5.add(labelTeclaParaBorrarCredito);
 
 		textFieldBorrarCredito = new TextFieldKey(this,(int)mSettingsManager.getSetting(KEY_DELETE_CREDIT));
 		textFieldBorrarCredito.setColumns(10);
-		textFieldBorrarCredito.setBounds(375, 269, 50, 20);
+		textFieldBorrarCredito.setBounds(375, 317, 50, 20);
 		panel5.add(textFieldBorrarCredito);
 
 		JLabel lblAgregarCredito = new JLabel("Agregar Credito");
 		lblAgregarCredito.setHorizontalAlignment(SwingConstants.RIGHT);
-		lblAgregarCredito.setBounds(262, 294, 103, 14);
+		lblAgregarCredito.setBounds(262, 342, 103, 14);
 		panel5.add(lblAgregarCredito);
 
 		rdbtnClickIzquierdo = new JRadioButton("Click Izquierdo");
 
 
 		rdbtnClickIzquierdo.setBackground(Color.WHITE);
-		rdbtnClickIzquierdo.setBounds(375, 290, 95, 23);
+		rdbtnClickIzquierdo.setBounds(375, 338, 120, 23);
 		panel5.add(rdbtnClickIzquierdo);
 
 		rdbtnClickDerecho = new JRadioButton("Click Derecho");
 		rdbtnClickDerecho.setBackground(Color.WHITE);
-		rdbtnClickDerecho.setBounds(475, 290, 89, 23);
+		rdbtnClickDerecho.setBounds(475, 338, 110, 23);
 		panel5.add(rdbtnClickDerecho);
 
 		ButtonGroup grupoMouse = new ButtonGroup();
@@ -583,7 +582,7 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		grupoMouse.add(rdbtnClickDerecho);
 
 		checkBoxCancelMusic = new JCheckBox("Cancelar musica con click Derecho");
-		checkBoxCancelMusic.setBounds(375,313,200, 23);
+		checkBoxCancelMusic.setBounds(375,375,250, 23);
 		checkBoxCancelMusic.setBackground(Color.WHITE);
 		checkBoxCancelMusic.addItemListener(new ItemListener() {
 			@Override
@@ -610,12 +609,12 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		panel5.add(checkBoxCancelMusic);
 
 		JLabel labelPassword = new JLabel("Contraseña para eliminar canciones");
-		labelPassword.setBounds(165, 336, 200, 23);
+		labelPassword.setBounds(145,405,230, 23);
 		labelPassword.setHorizontalAlignment(SwingConstants.RIGHT);
 		panel5.add(labelPassword);
 
 		passwordField = new JPasswordField(5);
-		passwordField.setBounds(375,336,200, 23);
+		passwordField.setBounds(375,405,170, 23);
 		panel5.add(passwordField);
 
 		JPanel panel6 = new JPanel();
@@ -638,7 +637,7 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		txtpnEsteEsEl_2.setText("Este es el panel para configurar la apariencia de MFRockola. Se recomienda que el tamaño de la imagen de fondo, sea el mismo de la resolución de pantalla que vaya a usar.");
 		txtpnEsteEsEl_2.setEditable(false);
 		txtpnEsteEsEl_2.setFocusable(false);
-		txtpnEsteEsEl_2.setBounds(220, 50, 367, 48);
+		txtpnEsteEsEl_2.setBounds(220, 50, 367, 62);
 		panel6.add(txtpnEsteEsEl_2);
 
 
@@ -649,7 +648,7 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 				textFieldDirFondos.setText(seleccionarArchivo(Utils.SELECT_IMAGE));
 			}
 		});
-		buttonPathFunds.setBounds(532, 138, 30, 23);
+		buttonPathFunds.setBounds(532, 152, 30, 23);
 		panel6.add(buttonPathFunds);
 
 		checkBoxFoundDefaultBackground = new JCheckBox("Fondo Predeterminado");
@@ -672,21 +671,21 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 
 		checkBoxFoundDefaultBackground.setBackground(Color.WHITE);
 		checkBoxFoundDefaultBackground.setHorizontalAlignment(SwingConstants.LEFT);
-		checkBoxFoundDefaultBackground.setBounds(225, 112, 300, 14);
+		checkBoxFoundDefaultBackground.setBounds(225, 126, 300, 14);
 		panel6.add(checkBoxFoundDefaultBackground);
 
 		JLabel lblDirectorioDeLos = new JLabel("Directorio de los Fondos");
-		lblDirectorioDeLos.setBounds(230, 142, 115, 14);
+		lblDirectorioDeLos.setBounds(230, 156, 115, 14);
 		panel6.add(lblDirectorioDeLos);
 
 		textFieldDirFondos = new JTextField();
-		textFieldDirFondos.setBounds(355, 139, 167, 20);
+		textFieldDirFondos.setBounds(355, 153, 167, 20);
 		panel6.add(textFieldDirFondos);
 		textFieldDirFondos.setColumns(10);
 
 		JPanel panelCeldas = new JPanel();
 		panelCeldas.setBorder(BorderFactory.createTitledBorder("Celdas de Canciones"));
-		panelCeldas.setBounds(230,177,393,133);
+		panelCeldas.setBounds(230,191,393,133);
 		panelCeldas.setBackground(Color.WHITE);
 		panelCeldas.setLayout(null);
 		panel6.add(panelCeldas);
@@ -752,7 +751,7 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 			}
 		});
 
-		comboBoxTamanioDeFuente = new JComboBox(tamanios);
+		comboBoxTamanioDeFuente = new JComboBox<>(tamanios);
 		comboBoxTamanioDeFuente.setBounds(341,50,43,23);
 		panelCeldas.add(comboBoxTamanioDeFuente);
 
@@ -833,29 +832,29 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 				"canciones aleatorias fueron reproducidas.");
 		txtPaneEstadis.setEditable(false);
 		txtPaneEstadis.setFocusable(false);
-		txtPaneEstadis.setBounds(220, 50, 367, 62);
+		txtPaneEstadis.setBounds(220, 50, 367, 76);
 		panel7.add(txtPaneEstadis);
 
 		JLabel lblCantidadDeCreditos = new JLabel("Cantidad de Creditos Usados");
-		lblCantidadDeCreditos.setBounds(328, 124, 139, 14);
+		lblCantidadDeCreditos.setBounds(328, 138, 139, 14);
 		panel7.add(lblCantidadDeCreditos);
 
 		labelCreditosUsados = new JLabel("0");
 		labelCreditosUsados.setFont(new Font("Tahoma", Font.BOLD, 11));
-		labelCreditosUsados.setBounds(475, 124, 47, 14);
+		labelCreditosUsados.setBounds(475, 138, 47, 14);
 		panel7.add(labelCreditosUsados);
 
 		JLabel lblCantidadDeMonedas = new JLabel("Cantidad de Monedas Insertadas");
-		lblCantidadDeMonedas.setBounds(308, 149, 159, 14);
+		lblCantidadDeMonedas.setBounds(308, 163, 159, 14);
 		panel7.add(lblCantidadDeMonedas);
 
 		labelMonedasInsertadas = new JLabel("0");
 		labelMonedasInsertadas.setFont(new Font("Tahoma", Font.BOLD, 11));
-		labelMonedasInsertadas.setBounds(475, 149, 47, 14);
+		labelMonedasInsertadas.setBounds(475, 163, 47, 14);
 		panel7.add(labelMonedasInsertadas);
 
 		JButton buttonMasPopulares = new JButton("Canciones más populares");
-		buttonMasPopulares.setBounds(308,174,181,25);
+		buttonMasPopulares.setBounds(308,188,181,25);
 		panel7.add(buttonMasPopulares);
 
 		buttonMasPopulares.addActionListener(new ActionListener() {
@@ -1052,7 +1051,7 @@ public class SettingsWindow extends JFrame implements RenameSongs.FinishListener
 		getContentPane().add(panelPrincipal);
 
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(0, 0, 642, 475); // posicion de la ventana
+		setBounds(0, 0, 700, 570); // posicion de la ventana
 
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		setLocation((screenSize.width-getWidth())/2,(screenSize.height-getHeight())/2);

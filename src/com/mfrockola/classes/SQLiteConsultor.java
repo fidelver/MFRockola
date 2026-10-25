@@ -3,19 +3,18 @@ package com.mfrockola.classes;
 import javax.swing.*;
 import java.sql.*;
 
-/**
- * Created by Angel C on 18/07/2016.
- */
 public class SQLiteConsultor {
 
     String ruta;
     Connection connection;
     Statement statement;
     ResultSet resultSet;
+    
+    private static boolean tablaVerificada = false;
 
     public SQLiteConsultor() {
         String userHome = System.getProperty("user.dir");
-        ruta = userHome+ "\\canciones_populares.s3db";
+        ruta = new java.io.File(userHome, "canciones_populares.s3db").getAbsolutePath();
     }
 
     public void connect() {
@@ -26,10 +25,38 @@ public class SQLiteConsultor {
         }
 
         try {
-            connection = DriverManager.getConnection("jdbc:sqlite:"+ruta);
+            connection = DriverManager.getConnection("jdbc:sqlite:" + ruta);
             statement = connection.createStatement();
+            crearTablasSiNoExisten();
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(null, e.getMessage());
+        }
+    }
+
+    /**
+     * Crea la tabla most_popular si no existe.
+     * Se llama cada vez que se abre una conexión, es idempotente
+     * gracias al IF NOT EXISTS.
+     */
+    private void crearTablasSiNoExisten() {
+        String sql = "CREATE TABLE IF NOT EXISTS most_popular (" +
+                "_ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "number INTEGER NOT NULL, " +
+                "name TEXT NOT NULL, " +
+                "artist TEXT NOT NULL, " +
+                "genre TEXT NOT NULL, " +
+                "times INTEGER DEFAULT 0, " +
+                "last_date INTEGER DEFAULT 0" +
+                ");";
+        try {
+            statement.executeUpdate(sql);
+            if (!tablaVerificada) {
+                System.out.println("=== SQLite: tabla most_popular verificada/creada ===");
+                tablaVerificada = true;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error creando tabla most_popular: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -40,7 +67,7 @@ public class SQLiteConsultor {
             statement.executeUpdate(sql);
         } catch (SQLException e) {
             result = false;
-            JOptionPane.showMessageDialog(null,e.getMessage());
+            JOptionPane.showMessageDialog(null, e.getMessage());
         } finally {
             try {
                 statement.close();
@@ -49,7 +76,6 @@ public class SQLiteConsultor {
                 JOptionPane.showMessageDialog(null, e.getMessage());
             }
         }
-
         return result;
     }
 
@@ -60,7 +86,7 @@ public class SQLiteConsultor {
             statement.executeUpdate("DELETE FROM most_popular;");
         } catch (SQLException e) {
             result = false;
-            JOptionPane.showMessageDialog(null,e.getMessage());
+            JOptionPane.showMessageDialog(null, e.getMessage());
         } finally {
             try {
                 statement.close();
@@ -69,19 +95,17 @@ public class SQLiteConsultor {
                 JOptionPane.showMessageDialog(null, e.getMessage());
             }
         }
-
         return result;
     }
 
     public boolean update(String sql) {
         boolean result = true;
         connect();
-
         try {
             statement.execute(sql);
         } catch (SQLException e) {
             result = false;
-            JOptionPane.showMessageDialog(null,e.getMessage());
+            JOptionPane.showMessageDialog(null, e.getMessage());
         } finally {
             try {
                 statement.close();
@@ -90,7 +114,6 @@ public class SQLiteConsultor {
                 JOptionPane.showMessageDialog(null, e.getMessage());
             }
         }
-
         return result;
     }
 
@@ -102,13 +125,26 @@ public class SQLiteConsultor {
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(null, e.getMessage());
         }
-
         return resultSet;
     }
 
     public void closeConnection() {
         try {
-            if (connection!= null) {
+            if (resultSet != null && !resultSet.isClosed()) {
+                resultSet.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        try {
+            if (statement != null && !statement.isClosed()) {
+                statement.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        try {
+            if (connection != null && !connection.isClosed()) {
                 connection.close();
             }
         } catch (SQLException e) {
